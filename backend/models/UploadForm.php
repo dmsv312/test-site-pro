@@ -42,7 +42,7 @@ class UploadForm extends Model
     /** csv|json, derived from the uploaded file's extension. */
     public function format(): string
     {
-        $ext = strtolower((string) ($this->file?->extension ?? ''));
+        $ext = $this->file !== null ? strtolower((string) $this->file->extension) : '';
 
         return $ext === 'json' ? 'json' : 'csv';
     }

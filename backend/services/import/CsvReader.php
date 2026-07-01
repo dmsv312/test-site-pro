@@ -29,7 +29,7 @@ final class CsvReader implements SourceReaderInterface
                 }
 
                 if ($header === null) {
-                    if (isset($data[0]) && is_string($data[0])) {
+                    if (isset($data[0])) {   // fgetcsv yields string|null; isset excludes the null
                         $data[0] = preg_replace('/^\xEF\xBB\xBF/', '', $data[0]);
                     }
                     $header = array_map(fn($h): string => trim($this->utf8((string) $h)), $data);

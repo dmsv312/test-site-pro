@@ -41,7 +41,7 @@ class CleanController extends Controller
             $dropped['below_volume'],
         ));
         $this->stdout(
-            "Downstream stages were reset — run `yii prepare/run` then `yii adgen/run` to rebuild "
+            'Downstream stages were reset — run `yii prepare/run` then `yii adgen/run` to rebuild '
             . "stages 5-6.\n",
         );
 

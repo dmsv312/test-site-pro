@@ -36,6 +36,7 @@ use yii\db\ActiveQuery;
  * @property string $stage
  * @property string|null $drop_reason
  * @property string|null $dedup_group_id
+ * @property int|null $ad_group_id
  * @property int $created_at
  *
  * @property-read ImportBatch $batch

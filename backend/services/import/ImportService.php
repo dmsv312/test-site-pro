@@ -46,7 +46,6 @@ final class ImportService
 
         $adapters = [];
         foreach ([GoogleAdsAdapter::class, SearchConsoleAdapter::class, AhrefsOrganicAdapter::class, AhrefsPaidAdapter::class] as $class) {
-            /** @var KeywordAdapterInterface $adapter */
             $adapter = new $class($normalizer, $detector);
             $adapters[$adapter->source()] = $adapter;
         }

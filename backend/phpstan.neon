@@ -5,8 +5,8 @@ parameters:
         - assets
         - commands
         - controllers
-        - mail
         - models
+        - services
         - widgets
         - tests/Acceptance
         - tests/Functional

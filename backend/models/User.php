@@ -79,8 +79,10 @@ class User extends BaseObject implements IdentityInterface
     public static function findIdentityByAccessToken($token, $type = null): static|null
     {
         $base = self::baseIdentity();
-        if ($base['accessToken'] !== '' && (string) $token !== ''
-            && hash_equals($base['accessToken'], (string) $token)) {
+        if (
+            $base['accessToken'] !== '' && (string) $token !== ''
+            && hash_equals($base['accessToken'], (string) $token)
+        ) {
             return new static($base);
         }
 

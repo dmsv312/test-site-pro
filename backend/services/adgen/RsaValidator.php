@@ -94,7 +94,7 @@ final class RsaValidator
 
         $seen = [];
         foreach ($items as $item) {
-            if (!is_string($item) || trim($item) === '') {
+            if (trim($item) === '') {
                 $errors[] = "{$label} is empty.";
                 continue;
             }

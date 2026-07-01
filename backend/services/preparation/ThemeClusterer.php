@@ -51,12 +51,13 @@ final class ThemeClusterer
         // fr
         'le' => true, 'les' => true, 'une' => true, 'des' => true, 'du' => true, 'et' => true,
         'ou' => true, 'pour' => true, 'avec' => true, 'sur' => true, 'au' => true, 'aux' => true,
-        // it
+        // it — 'con' is listed under es above (the set is global), so it's omitted here.
         'il' => true, 'lo' => true, 'gli' => true, 'di' => true, 'e' => true, 'da' => true,
-        'su' => true, 'è' => true, 'per' => true, 'con' => true,
-        // pt
-        'os' => true, 'as' => true, 'uma' => true, 'do' => true, 'da' => true, 'em' => true,
-        'no' => true, 'na' => true, 'ou' => true, 'para' => true, 'com' => true,
+        'su' => true, 'è' => true, 'per' => true,
+        // pt — words already listed above for another language (as, da, ou, para) are omitted here;
+        // the set is global, so each is a stopword for every language regardless of its section.
+        'os' => true, 'uma' => true, 'do' => true, 'em' => true,
+        'no' => true, 'na' => true, 'com' => true,
     ];
 
     /**
@@ -85,7 +86,9 @@ final class ThemeClusterer
             $bestFreq = -1;
             foreach ($tokensById[$id] as $token) {
                 $f = $freq[$token];
-                if ($f > $bestFreq || ($f === $bestFreq && ($best === null || strcmp($token, $best) < 0))) {
+                // A token's frequency is always ≥ 1 and $bestFreq starts at -1, so the first token
+                // always wins on `$f > $bestFreq`; by the time the tie-break runs, $best is set.
+                if ($f > $bestFreq || ($f === $bestFreq && strcmp($token, $best) < 0)) {
                     $best = $token;
                     $bestFreq = $f;
                 }
