@@ -257,10 +257,16 @@ Recorded as context → decision → consequence.
     import for GAds". → A single Editor-compatible sheet carries both entity types, disambiguated by
     which columns a row fills: a **keyword** row (`Campaign`, `Campaign Type` = Search, `Ad Group`,
     `Keyword`, `Match Type`, `Final URL`) and a **responsive search ad** row (`Campaign`, `Ad Group`,
-    `Ad Type` = "Responsive search ad", `Headline 1..15`, `Description 1..4`, `Path 1/2`, `Final URL`).
-    Every row names its campaign + ad group, so Editor rebuilds the whole tree from one import — one
-    upload instead of two. The formatting (RFC-4180 quoting, CRLF, UTF-8 without a BOM) lives in the
-    pure, unit-tested `GoogleAdsEditorExport`; `ExportService` only assembles the rows from the models.
+    `Headline 1..15`, `Description 1..4`, `Path 1/2`, `Final URL`). Editor identifies the ad as an RSA
+    from the presence of the headline/description columns — **its CSV schema has no ad-type column**, so
+    we emit none (an early draft carried an `Ad Type` = "Responsive search ad" column; Editor doesn't
+    recognize it and would leave it unmapped, so it was dropped after verifying the real import format).
+    Every row names its campaign + ad group, so one import attaches all the keywords and ads to their
+    campaigns — one upload instead of two. New campaigns import as **stubs that still need a budget + bid
+    strategy** before they can be posted (the file is keywords + ads, not campaign settings). Formatting
+    (RFC-4180 quoting, CRLF, UTF-8 without a BOM — verified compatible with Editor, not a published
+    Google spec) lives in the pure, unit-tested `GoogleAdsEditorExport`; `ExportService` only assembles
+    the rows from the models.
 
 30. **Keyword match type: Phrase.** A single match type keeps the demo export controllable and
     defensible. → Every keyword is exported as `Phrase` — balanced reach without the noise of Broad or

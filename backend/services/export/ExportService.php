@@ -87,7 +87,7 @@ final class ExportService
         $keywordRows = 0;
         $adRows = 0;
         foreach ($rows as $row) {
-            if (isset($row['Ad Type'])) {
+            if (isset($row['Headline 1'])) {   // an RSA row (Editor identifies the ad the same way)
                 $adRows++;
             } elseif (isset($row['Keyword'])) {
                 $keywordRows++;

@@ -38,7 +38,7 @@ class ExportController extends Controller
     public function actionDownload(): Response
     {
         $rows = (new ExportService())->rows();
-        $hasAd = array_filter($rows, static fn (array $row): bool => isset($row['Ad Type'])) !== [];
+        $hasAd = array_filter($rows, static fn (array $row): bool => isset($row['Headline 1'])) !== [];
 
         if (!$hasAd) {
             Yii::$app->session->setFlash(

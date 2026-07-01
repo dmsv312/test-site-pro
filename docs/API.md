@@ -99,14 +99,19 @@ recreates the whole tree on import. Every row names its `Campaign` (+ `Campaign 
 | Row type | Filled columns |
 |----------|----------------|
 | Keyword | `Keyword` · `Match Type` (**Phrase**, decision 30) · `Final URL` |
-| Responsive search ad | `Ad Type` = `Responsive search ad` · `Headline 1..15` (≤30 chars) · `Description 1..4` (≤90 chars) · `Path 1` · `Path 2` · `Final URL` |
+| Responsive search ad | `Headline 1..15` (≤30 chars) · `Description 1..4` (≤90 chars) · `Path 1` · `Path 2` · `Final URL` |
 
-`Final URL` is the ad group's verified localized target URL — never taken from any generated text.
-`Max CPC` is left blank (the advertiser sets bids). Only ads flagged `is_valid` are written; an ad
-group without a valid ad still exports its keywords and is flagged in the preview. Output is RFC-4180
-(comma-separated, `"`-quoted with doubled inner quotes, CRLF line endings), UTF-8 without a BOM — the
-encoding Google Ads Editor imports. Like the rest of the pipeline the file is **derived on demand**
-from the current state (decision 31), so it always reflects the latest preparation and generation.
+Editor recognizes the ad as an RSA from the headline/description columns — its CSV schema has **no
+ad-type column**, so none is emitted. `Final URL` is the ad group's verified localized target URL —
+never taken from any generated text. `Max CPC` is left blank (the advertiser sets bids). Only ads
+flagged `is_valid` are written; an ad group without a valid ad still exports its keywords and is
+flagged in the preview. Output is RFC-4180 (comma-separated, `"`-quoted with doubled inner quotes,
+CRLF line endings), UTF-8 without a BOM — verified to import into Google Ads Editor. Like the rest of
+the pipeline the file is **derived on demand** from the current state (decision 31), so it always
+reflects the latest preparation and generation.
+
+New campaigns import as **stubs that still need a budget and bid strategy** in Editor before they can
+be posted — the export is keywords + ads, not campaign settings.
 
 ## Normalized keyword record
 

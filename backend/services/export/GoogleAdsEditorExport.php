@@ -10,11 +10,12 @@ namespace app\services\export;
  * Pure and side-effect-free (no database, no Yii) so it is fully unit-testable. One combined file
  * (decision 29) carries both entity types, distinguished by which columns a row fills:
  *   - a **keyword** row fills `Keyword` + `Match Type` (Phrase, decision 30);
- *   - a **responsive search ad** row fills `Ad Type` = "Responsive search ad" + `Headline 1..15` /
- *     `Description 1..4` / `Path 1` / `Path 2`.
- * Every row names its `Campaign` (+ `Campaign Type` = Search) and `Ad Group`, so Google Ads Editor
- * re-creates the campaign/ad-group tree on import. `Final URL` is the ad group's verified localized
- * URL — never taken from any generated text.
+ *   - a **responsive search ad** row fills `Headline 1..15` / `Description 1..4` / `Path 1` / `Path 2`.
+ * Google Ads Editor recognizes the ad as an RSA from the presence of the headline/description columns
+ * — its CSV schema has no ad-type column, so we don't emit one. Every row names its `Campaign`
+ * (+ `Campaign Type` = Search) and `Ad Group`; on import the keywords and ads attach to those
+ * campaigns, which Editor creates as stubs needing a budget + bid strategy if they don't already
+ * exist. `Final URL` is the ad group's verified localized URL — never taken from any generated text.
  *
  * The keyword text is treated as untrusted at this boundary and sanitized ({@see sanitizeKeyword});
  * ad copy has already cleared {@see \app\services\adgen\RsaValidator} upstream. Output is RFC-4180
@@ -25,7 +26,6 @@ final class GoogleAdsEditorExport
 {
     public const MATCH_TYPE_PHRASE = 'Phrase';
     public const CAMPAIGN_TYPE_SEARCH = 'Search';
-    public const AD_TYPE_RSA = 'Responsive search ad';
 
     /** RSA ceilings — mirror {@see \app\services\adgen\RsaValidator} (ads are already within them). */
     public const MAX_HEADLINES = 15;
@@ -39,7 +39,7 @@ final class GoogleAdsEditorExport
      */
     public static function header(): array
     {
-        $columns = ['Campaign', 'Campaign Type', 'Ad Group', 'Max CPC', 'Keyword', 'Match Type', 'Ad Type'];
+        $columns = ['Campaign', 'Campaign Type', 'Ad Group', 'Max CPC', 'Keyword', 'Match Type'];
         for ($i = 1; $i <= self::MAX_HEADLINES; $i++) {
             $columns[] = "Headline {$i}";
         }
@@ -121,7 +121,6 @@ final class GoogleAdsEditorExport
             'Campaign' => $campaign,
             'Campaign Type' => self::CAMPAIGN_TYPE_SEARCH,
             'Ad Group' => $adGroup,
-            'Ad Type' => self::AD_TYPE_RSA,
             'Path 1' => (string) $path1,
             'Path 2' => (string) $path2,
             'Final URL' => $finalUrl,

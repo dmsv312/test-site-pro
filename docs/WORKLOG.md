@@ -33,6 +33,25 @@
 
 ## Journal
 
+### 2026-07-01 — Verified the export against the real Google Ads Editor import format; dropped `Ad Type`
+- **Checked the actual file against Google's documented Editor CSV format** (research + adversarial
+  verification over real `GoogleAdsEditorExport::render()` output). Confirmed the parts that matter:
+  the **combined single file with mixed keyword+ad rows is exactly Google's documented design** (Editor
+  reads a row's type from which columns it fills), no BOM (the top cause of "header not recognized" —
+  avoided), CRLF, correct RFC-4180 quoting, valid UTF-8 (em-dash preserved), all headers recognized
+  (name-matched, order-independent), `Match Type` = `Phrase` valid, and the 3-headline/2-description
+  RSA minimum met.
+- **One real correction:** the `Ad Type` = "Responsive search ad" column is **not** in Editor's CSV
+  schema — Editor infers the RSA from the `Headline`/`Description` columns, so that column would just
+  import unmapped. Removed it from the header and ad row, dropped the `AD_TYPE_RSA` constant, and
+  switched the internal ad-row discriminator (snapshot + download) from `isset($row['Ad Type'])` to
+  `isset($row['Headline 1'])` — the same signal Editor uses. Updated the class docblock, PLAN
+  decision 29, API docs and tests to match, and corrected two over-claims (the file doesn't "rebuild
+  the whole tree": new campaigns import as **stubs needing a budget + bid strategy**; and the
+  encoding is "verified compatible", not a published Google spec).
+- **Verified nothing drifted:** re-generated the CSV — still 127 lines (107 keyword + 19 ad rows), now
+  with **no `Ad Type` column**; full unit suite green, PHPStan/PHPCS clean.
+
 ### 2026-07-01 — Static analysis + lint made runnable and green over the whole codebase
 - `composer static` (PHPStan) and `composer cs` (PHPCS) had both silently broken when the portal
   scaffold was removed — each config still listed the deleted `mail/` directory, which aborts the run

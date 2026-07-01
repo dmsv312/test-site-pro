@@ -16,7 +16,6 @@ final class GoogleAdsEditorExportTest extends \Codeception\Test\Unit
         verify(in_array('Ad Group', $header, true))->true();
         verify(in_array('Keyword', $header, true))->true();
         verify(in_array('Match Type', $header, true))->true();
-        verify(in_array('Ad Type', $header, true))->true();
         verify(in_array('Headline 1', $header, true))->true();
         verify(in_array('Headline 15', $header, true))->true();
         verify(in_array('Description 4', $header, true))->true();
@@ -24,6 +23,9 @@ final class GoogleAdsEditorExportTest extends \Codeception\Test\Unit
         // No Headline 16 / Description 5 — the RSA ceiling is respected.
         verify(in_array('Headline 16', $header, true))->false();
         verify(in_array('Description 5', $header, true))->false();
+        // No 'Ad Type' column — it isn't in Google Ads Editor's CSV schema; Editor recognizes the RSA
+        // from the Headline/Description columns, so emitting it would just be an unmapped column.
+        verify(in_array('Ad Type', $header, true))->false();
     }
 
     public function testKeywordRowDefaultsToPhraseAndSanitizes(): void
@@ -74,7 +76,7 @@ final class GoogleAdsEditorExportTest extends \Codeception\Test\Unit
             'https://site.pro/de/',
         );
 
-        verify($row['Ad Type'])->equals('Responsive search ad');
+        verify(isset($row['Ad Type']))->false();   // no ad-type column; the ad is an RSA by its columns
         verify($row['Headline 1'])->equals('Headline A');
         verify($row['Headline 3'])->equals('Headline C');
         verify($row['Description 1'])->equals('Description one');
