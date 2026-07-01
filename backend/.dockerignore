@@ -1,0 +1,12 @@
+.git
+/vendor
+/runtime/*
+/web/assets/*
+/web-pristine
+/tests
+/vagrant
+Vagrantfile
+c3.php
+.idea
+.vscode
+docker-compose.yml

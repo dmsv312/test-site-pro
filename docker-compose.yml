@@ -1,0 +1,56 @@
+# Полный стек одной командой: docker compose up --build → http://127.0.0.1:8100
+# Прод-режим (YII_ENV=prod); наружу — через Cloudflare Tunnel (sitepro.dm312sv.online).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sitepro
+      POSTGRES_USER: sitepro
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sitepro"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      YII_ENV: prod
+      YII_DEBUG: "false"
+      APP_URL: https://sitepro.dm312sv.online
+      COOKIE_VALIDATION_KEY: kZ3xR-siteproTEST-9qWmA2Yv7bL0cD
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: sitepro
+      DB_USERNAME: sitepro
+      DB_PASSWORD: secret
+    volumes:
+      # Живой код с хоста (правки видны без пересборки).
+      - ./backend:/var/www/html
+      # vendor — из образа (аноним. том): работает и при клоне без host-vendor.
+      - /var/www/html/vendor
+      # Пишущие пути — контейнерные тома (надёжно с правами, не зависит от хоста).
+      - runtimedata:/var/www/html/runtime
+      - webdata:/var/www/html/web
+
+  web:
+    image: nginx:alpine
+    depends_on:
+      - app
+    volumes:
+      - webdata:/var/www/html/web:ro
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "127.0.0.1:8100:80"
+
+volumes:
+  dbdata:
+  webdata:
+  runtimedata:

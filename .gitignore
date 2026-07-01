@@ -1,0 +1,12 @@
+backend/vendor/
+backend/runtime/*
+!backend/runtime/.gitignore
+backend/web/assets/*
+!backend/web/assets/.gitignore
+backend/web-pristine/
+.env
+*.log
+/data/
+
+# Внутренний рабочий документ — не для публичного репозитория.
+implementation-plan.md
