@@ -1,6 +1,13 @@
+# Task — original assignment (as provided)
+
+> Verbatim copy of the assignment. Do not edit; record interpretation and decisions
+> in [`docs/PLAN.md`](../PLAN.md).
+
+---
+
 #vibecoding
 
-We neede marketing automation platform made 100% with vibecode (0 code) using Yii2. You are free to put your ideas to make the algorithm better. 
+We neede marketing automation platform made 100% with vibecode (0 code) using Yii2. You are free to put your ideas to make the algorithm better.
 
 1. Generate few data sources (CSV or JSON) as input:
 
@@ -37,5 +44,3 @@ Generate Ads for them (on their on langauge and correct target URL) by GAds form
 4. Generate a preview and file to import for GAds
 
 5. Provide the URL where we can test it: upload, admin-area, preview and export ability
-
-
