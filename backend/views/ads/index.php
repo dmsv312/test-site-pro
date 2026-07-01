@@ -140,6 +140,7 @@ $chip = static function (string $text, int $max): string {
 
 <?php if ($summary['hasRun']): ?>
     <p class="text-muted small mt-3 mb-0">
-        Next: export these campaigns as a Google Ads Editor CSV (keywords + responsive search ads).
+        Next: <?= Html::a('export these campaigns', ['/export/index']) ?> as a Google Ads Editor CSV
+        (keywords + responsive search ads).
     </p>
 <?php endif; ?>

@@ -62,7 +62,8 @@ Components:
 | `rule_config` | thresholds (e.g. min volume) editable in the admin area |
 | `ad_group` | one language+theme bucket: language, theme (+ `theme_key`), campaign name, final URL, keyword count — fully derived from `keyword`, rebuilt each preparation run |
 | `generated_ad` | one RSA per ad group: headlines/descriptions (JSON), paths, final URL, generated_by (stored/template), is_valid — fully derived, rebuilt each run, cascades with its ad group |
-| `export_file` | produced export artifacts |
+
+The draft `export_file` table was dropped: the export is derived on demand, not persisted (decision 31).
 
 Full field list and source→field mapping: [`DATA.md`](DATA.md).
 
@@ -252,15 +253,48 @@ Recorded as context → decision → consequence.
     text — so a bad or hostile string can neither ship in the export nor redirect a campaign. Stored
     copy that fails validation is discarded and the template used, recorded in the ad's `note`.
 
+29. **One combined Google Ads Editor CSV, not separate keyword/ad files.** The task asks for a "file to
+    import for GAds". → A single Editor-compatible sheet carries both entity types, disambiguated by
+    which columns a row fills: a **keyword** row (`Campaign`, `Campaign Type` = Search, `Ad Group`,
+    `Keyword`, `Match Type`, `Final URL`) and a **responsive search ad** row (`Campaign`, `Ad Group`,
+    `Ad Type` = "Responsive search ad", `Headline 1..15`, `Description 1..4`, `Path 1/2`, `Final URL`).
+    Every row names its campaign + ad group, so Editor rebuilds the whole tree from one import — one
+    upload instead of two. The formatting (RFC-4180 quoting, CRLF, UTF-8 without a BOM) lives in the
+    pure, unit-tested `GoogleAdsEditorExport`; `ExportService` only assembles the rows from the models.
+
+30. **Keyword match type: Phrase.** A single match type keeps the demo export controllable and
+    defensible. → Every keyword is exported as `Phrase` — balanced reach without the noise of Broad or
+    the narrowness of Exact, and no negative-keyword scaffolding to invent. The value is a single point
+    of change in `GoogleAdsEditorExport` if a per-keyword or all-three strategy is wanted later.
+
+31. **The export is derived on demand, not persisted.** The draft data model had an `export_file`
+    table for artifacts. → Dropped: the CSV is a **pure function of the current `ad_group` /
+    `generated_ad` / `keyword` state**, built when requested, exactly like the ad groups and ads
+    themselves are rebuilt each run (decisions 20, 27). This keeps a single source of truth (the
+    pipeline state), so a stale saved file can never disagree with what preparation/generation last
+    produced. The keyword text is sanitized at this boundary (valid UTF-8, no control characters,
+    collapsed whitespace, lowercased, **word order kept** — unlike the token-sorted `normalized_term`
+    dedup key), and only ads flagged `is_valid` are written; a group without a valid ad still exports
+    its keywords and is surfaced as a warning in the preview.
+
+32. **Static analysis and lint cover the whole app and run green.** Both `composer static` (PHPStan)
+    and `composer cs` (PHPCS) had silently broken when the portal scaffold was removed — each config
+    still pointed at the deleted `mail/` directory, which aborts the run before it analyses anything —
+    and PHPStan never scanned `services/` at all. → Removed the dangling path, put `services/` in scope
+    for both tools, and cleared what that surfaced: 6 low-risk PHPStan findings (a missing `@property`,
+    a widening `@var`, redundant type guards, duplicate stopword keys, and a provably-dead tie-break
+    branch in `ThemeClusterer`). In PHPCS the legacy `PrivateNoUnderscore` rule was excluded because the
+    codebase deliberately uses modern no-underscore private members and promoted constructor properties.
+    Both run green; the pipeline's outputs were re-verified identical, so every fix was
+    behaviour-preserving.
+
 ## Build stages
 
 See [`WORKLOG.md`](WORKLOG.md) for the stage table and live status. In short: spike ✅ →
-skeleton ✅ → import & model ✅ → cleaning ✅ → prepare ✅ → ad generation ✅ → export (next) → deploy.
+skeleton ✅ → import & model ✅ → cleaning ✅ → prepare ✅ → ad generation ✅ → export ✅ → deploy (next).
 
 ## Open questions
 
-- Stage 7 export: keyword match type per row (broad / phrase / exact), and whether to emit one
-  combined Google Ads Editor CSV (keywords + RSA ads) or separate keyword and ad files.
 - Whether per-ad-group (per-theme) landing-URL overrides in the admin are worth adding, now that
   the per-language default (decision 15) is confirmed to be enough for the demo.
 - A richer ad-copy source later (a live Claude Code CLI call at build time, or more stored copy for

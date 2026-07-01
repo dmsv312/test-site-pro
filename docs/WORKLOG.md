@@ -4,20 +4,17 @@
 
 ## Current status
 
-- **Done:** stage 6 — ad generation. One **responsive search ad per ad group**, in the group's
-  language and pointing at its localized target URL. Copy is preferred from **stored,
-  offline-authored content** (a committed JSON keyed by `language:theme_key`, decision 3) and falls
-  back to a deterministic **per-language template engine**, so the deployed host needs no AI
-  credentials. Every ad — whichever source — must clear an **RSA validator** (≤30-char headlines,
-  ≤90-char descriptions, distinct, clean UTF-8) before it's stored, and the **target URL is
-  authoritative from the ad group, never the copy** (untrusted text can't redirect a campaign).
-  Admin **preview** + `yii adgen/run`; 23 unit tests (adversarial review passed). 19 ad groups →
-  **19 ads** (6 from stored EN copy, 13 template), **0 invalid**, covering all **107** prepared
-  keywords; idempotent.
-  Generation is the **tail** of the pipeline: re-running preparation rebuilds the ad groups and
-  cascades the ads away, so re-prep invalidates stage 6 by design (mirroring stage 4→5). Simplified
-  `GroupingService` to a plain full rebuild accordingly (decision 27 supersedes 26).
-- **Next:** stage 7 — campaign preview + Google Ads Editor CSV export (keywords + RSA ads).
+- **Done:** stage 7 — campaign preview + **Google Ads Editor CSV export**. A single combined,
+  Editor-compatible CSV (decision 29) recreates the whole tree: one campaign per language, its themed
+  ad groups, every prepared keyword (match type **Phrase**, decision 30), and one responsive search
+  ad per ad group — each pointing at its verified localized target URL. The export is **derived on
+  demand** from the current pipeline state (decision 31 — no persisted artifact table), so it always
+  reflects the latest preparation/generation. Keyword text is sanitized at the boundary; only
+  **valid** ads are written; formatting is RFC-4180 (quoted, CRLF), UTF-8 without a BOM. Admin
+  **preview** at `/export` with a download button + `yii export/file [path]`; 10 unit tests. Verified:
+  **126 rows** (107 keywords + 19 ads) across 6 campaigns / 19 ad groups; `/export` renders (200) and
+  `/export/download` streams `text/csv` as an attachment.
+- **Next:** stage 9 — deploy hardening + smoke.
 - **Live:** https://sitepro.dm312sv.online · local http://127.0.0.1:8100 (admin login from `.env`)
 
 ## Stages
@@ -30,11 +27,61 @@
 | 4 | Cleaning pipeline + funnel dashboard | ✅ done |
 | 5 | Prepare for Google Ads (already-used/forbidden/merge/group by language+theme) | ✅ done |
 | 6 | Ad generation (per language, correct URL) — stored/template + RSA validation | ✅ done |
-| 7 | Campaign preview + Google Ads Editor CSV export | planned |
+| 7 | Campaign preview + Google Ads Editor CSV export | ✅ done |
 | 8 | Real data collection → input files + labeled samples | ✅ done (early) |
 | 9 | Deploy hardening + smoke | planned |
 
 ## Journal
+
+### 2026-07-01 — Static analysis + lint made runnable and green over the whole codebase
+- `composer static` (PHPStan) and `composer cs` (PHPCS) had both silently broken when the portal
+  scaffold was removed — each config still listed the deleted `mail/` directory, which aborts the run
+  before it analyses anything. On top of that, PHPStan's `paths` never included the `services/` layer,
+  so the entire pipeline (import → cleaning → preparation → adgen → export) went unchecked.
+- **PHPStan:** dropped the dangling `mail` path, added `services` to `paths` (level 5, whole app now
+  covered), and fixed the 6 latent issues it surfaced — all low-risk, none a live bug: a missing
+  `@property ad_group_id` on `Keyword`, a widening `@var` and a redundant `is_string`/`isset` guard in
+  the import path, a redundant `is_string` in `RsaValidator`, cross-language **duplicate stopword keys**
+  in `ThemeClusterer` (the set was unchanged — just written twice), and a **provably-dead** `$best ===
+  null` tie-break branch in the clusterer (unreachable because `$bestFreq` starts at −1 and every token
+  frequency is ≥1). **No errors.**
+- **PHPCS:** dropped the same `mail` path, added `services`/`widgets`, and excluded the legacy
+  `PrivateNoUnderscore` rule (this codebase uses modern no-underscore private members and promoted
+  constructor properties throughout — the rule contradicted the code's own consistent style).
+  `phpcbf` auto-fixed 3 formatting nits (a double-quoted string, two control-structure spacings).
+  **Clean.**
+- **Verified nothing drifted:** re-ran the full pipeline — 154 cleaned → 107 prepared → 19 ad groups
+  → 19 ads (0 invalid) → 126 export rows, identical to before (the clusterer edits are behaviour-
+  preserving). Full unit suite **83 pass**.
+
+### 2026-07-01 — Stage 7: campaign preview + Google Ads Editor CSV export
+- **One combined Google Ads Editor CSV** (`services/export/`): the pure, side-effect-free
+  `GoogleAdsEditorExport` owns the format (column schema, row factories, RFC-4180 rendering) and is
+  fully unit-tested; `ExportService` walks the `ad_group` / `generated_ad` / `keyword` state, and
+  `ExportController` (`/export`) + `ExportController` console (`yii export/file`) are thin. The file
+  carries both entity types in one sheet, disambiguated by which columns a row fills — a **keyword**
+  row (`Keyword` + `Match Type`) and a **responsive search ad** row (`Ad Type` = "Responsive search
+  ad" + `Headline 1..15` / `Description 1..4` / `Path 1/2`). Every row names its `Campaign`
+  (+ `Campaign Type` = Search) and `Ad Group`, so Editor rebuilds the tree on import (decision 29).
+- **Phrase match type** on every keyword (decision 30); `Max CPC` left blank (the advertiser sets
+  bids). `Final URL` is the ad group's verified localized URL on both the keyword and the ad row —
+  **never taken from any generated text**.
+- **Derived on demand, not persisted** (decision 31): no `export_file` table; the CSV is a pure
+  function of the current state, matching the "fully derived, rebuilt each run" principle of stages
+  5–6. Re-preparing/re-generating changes the export automatically.
+- **Safe at the boundary.** Keyword text is sanitized before it hits the file (valid UTF-8, control
+  characters dropped, whitespace collapsed, lowercased, word order kept — unlike the token-sorted
+  `normalized_term`), and per-group duplicate terms are collapsed. Only ads flagged `is_valid` are
+  written; an ad group missing a valid ad still exports its keywords and is surfaced as a warning in
+  the preview. Output is RFC-4180 (comma-separated, `"`-quoted with doubled inner quotes, CRLF),
+  UTF-8 without a BOM — the encoding Editor imports.
+- **Verified by hand:** `yii export/file` writes a **127-line** CSV (header + 107 keyword rows + 19
+  ad rows) across 6 campaigns / 19 ad groups, match type Phrase, localized Final URLs, UTF-8
+  preserved (e.g. `Site.pro — DE`). Authenticated web check: `/export` renders (200) with the right
+  counts (6 / 19 / 107 / 19) and `/export/download` returns `text/csv` as an attachment
+  (`google-ads-editor-<date>.csv`). **10 new unit tests** (header schema, Phrase default + keyword
+  sanitizing incl. control chars, RSA-ceiling spreading, RFC-4180 quoting of commas/quotes, CRLF) —
+  full unit suite **83 pass**. PHPCS clean on the new files.
 
 ### 2026-07-01 — Stage 6: ad generation (stored/template + RSA validation)
 - **One responsive search ad per ad group** (`services/adgen/`, migration `generated_ad` +
