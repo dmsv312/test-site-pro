@@ -87,8 +87,8 @@ $labelOptions = ['class' => 'form-label fw-semibold small'];
                     <?php ActiveForm::end(); ?>
 
                     <div class="text-body-secondary text-center mt-3 small">
-                        Demo login: <strong>admin / admin</strong>.<br>
-                        Credentials come from <code>.env</code> (<code>ADMIN_USERNAME</code> / <code>ADMIN_PASSWORD</code>).
+                        Access is restricted. Credentials are configured in
+                        <code>.env</code> (<code>ADMIN_USERNAME</code> / <code>ADMIN_PASSWORD</code>).
                     </div>
 
                 </div>
