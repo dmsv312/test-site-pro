@@ -70,25 +70,43 @@ Every source maps onto this record; the admin views and export read from it.
 
 | Field | Meaning |
 |-------|---------|
-| `batch_id` | the import batch it came from |
+| `batch_id` | the import batch it came from (FK → `import_batch`, cascade) |
 | `source` | `google_ads` \| `search_console` \| `ahrefs_organic` \| `ahrefs_paid` |
 | `raw_term` | the term exactly as imported |
-| `normalized_term` | lowercased, trimmed, whitespace-collapsed, token-sorted |
-| `language`, `geo` | language / market (from the source or detected) |
-| `avg_monthly_searches` | monthly search volume (real where available) |
-| `cpc_low`, `cpc_high` | CPC range |
-| `competition_index` | advertiser competition |
+| `normalized_term` | lowercased, trimmed, whitespace-collapsed, token-sorted (dedup key) |
+| `language`, `geo` | language / market (from the source, or detected for Search Console) |
+| `avg_monthly_searches` | monthly search volume (real where available; null for Search Console) |
+| `cpc` | cost-per-click (one value per keyword; null where the source has none) |
+| `competition` | advertiser competition — `LOW` \| `MEDIUM` \| `HIGH` (Google Ads only) |
 | `competitor_domain` | set for competitor (paid) keywords |
 | `source_url` | landing/target URL from the source, when present |
-| `is_junk`, `is_duplicate`, `is_brand`, `below_volume` | cleaning flags |
-| `is_already_used`, `is_forbidden` | preparation flags |
+| `clicks`, `impressions`, `position` | extra metrics carried by Search Console / Ahrefs organic |
+| `raw_data` | the full original source row, as JSON, for audit |
+| `is_junk`, `is_duplicate`, `is_brand`, `below_volume` | cleaning flags (set from stage 4) |
+| `is_already_used`, `is_forbidden` | preparation flags (set from stage 5) |
 | `stage` | `imported` \| `cleaned` \| `prepared` \| `ad_ready` |
 | `drop_reason` | why it was excluded (drives the funnel) |
 | `dedup_group_id` | canonical group for merged duplicates |
 
+The `import_batch` table records one row per upload: `source`, `filename`, `format` (csv|json),
+`rows_total` / `rows_imported` / `rows_skipped`, `status` (imported|failed), and a `message`.
+
 ## Language & target URL
 
-- Keywords are grouped by `language`/`market` for both ad copy and campaign structure.
-- Each language maps to the correct localized Site.pro landing URL (e.g. `site.pro/de`).
-  Until canonical URLs are provided, a convention is used and can be overridden in the admin
-  area.
+- Keywords are grouped by `language`/`market` for both ad copy and campaign structure. Three
+  sources carry an explicit language column; **Search Console has none, so language is
+  inferred** by a small marker-word/diacritic detector (defaults to English when nothing is
+  distinctive — see `services/LanguageDetector.php`).
+- Each language maps to the correct localized Site.pro landing URL. Verified live (2026-07-01):
+
+  | Language | Landing URL |
+  |----------|-------------|
+  | en | `https://site.pro/` |
+  | de | `https://site.pro/de/` |
+  | es | `https://site.pro/es/` |
+  | fr | `https://site.pro/fr/` |
+  | it | `https://site.pro/it/` |
+  | pt | `https://site.pro/pt-br/` (no `/pt` page exists; the site serves Portuguese at `/pt-br/`) |
+
+  The map lives in `backend/config/params.php` and can be overridden in the admin area once
+  canonical URLs are provided (used from stage 6).

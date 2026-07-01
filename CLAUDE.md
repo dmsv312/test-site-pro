@@ -36,12 +36,13 @@ step and why the rest were dropped.
 
 ```
 backend/                Yii2 application
-  config/               web.php, console.php, db.php (env-driven), params.php
-  controllers/          thin controllers (SiteController for now)
-  models/               ActiveRecord + form models
-  migrations/           schema (added from stage 3 onward)
-  services/             import / cleaning / preparation / ad-gen / export (added from stage 3)
-  views/                admin UI
+  config/               web.php, console.php, db.php (env-driven), params.php (lang→URL map)
+  controllers/          thin controllers (SiteController, ImportController = admin area)
+  commands/             console controllers (ImportController: import/samples, import/file)
+  models/               ActiveRecord (Keyword, ImportBatch) + form models (UploadForm, KeywordSearch, User, Login)
+  migrations/           schema — import_batch + keyword (stage 3)
+  services/             import/ (readers, adapters, ImportService); cleaning/prepare/ad-gen/export come later
+  views/                admin UI (site/, import/)
   web/                  front controller + published assets
   docker/entrypoint.sh  waits for DB, refreshes static, runs migrations, starts php-fpm
   Dockerfile            php:8.4-fpm + ext (pdo_pgsql, intl, gd, …) + composer install
@@ -53,14 +54,17 @@ docs/                   PLAN, DATA, API, WORKLOG, brief/TASK
 ## Commands
 
 ```bash
-docker compose up --build -d              # full stack → http://127.0.0.1:8100 (admin/admin)
-docker compose exec app php yii migrate   # run migrations manually
+cp .env.example .env                      # first run: fill in config (admin login, DB, cookie key)
+docker compose up --build -d              # full stack → http://127.0.0.1:8100 (admin login from .env)
+docker compose exec app php yii migrate   # run migrations manually (also run on container start)
+docker compose exec app php yii import/samples   # import the four sample-data files
 docker compose logs -f app                # app (php-fpm) logs
 docker compose down                       # stop (keep data);  down -v to reset volumes
 ```
 
-Code is bind-mounted from the host: edits under `backend/` are live without a rebuild.
-Rebuild only when `Dockerfile`/composer deps change.
+Config — including the admin username/password — comes from `.env` (see `.env.example`);
+nothing sensitive is hard-coded in PHP. Code is bind-mounted from the host: edits under
+`backend/` are live without a rebuild. Rebuild only when `Dockerfile`/composer deps change.
 
 ## Conventions
 

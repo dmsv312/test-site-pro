@@ -107,6 +107,28 @@ Recorded as context → decision → consequence.
 7. **Dev volume layout.** Host-mounted source for live edits; container-managed volumes for
    `vendor` / `runtime` / `web`. → Fast iteration locally, and a fresh clone runs without any
    host state.
+8. **All config — including admin credentials — comes from `.env`.** Nothing sensitive is
+   hard-coded in PHP. → `models/User.php` builds a single admin identity from `ADMIN_USERNAME` /
+   `ADMIN_PASSWORD`; `docker-compose.yml` uses `${VAR:-default}` substitution; `.env.example`
+   documents every variable and `.env` is gitignored.
+9. **Keep each source's original row in `raw_data` (JSON).** The unified columns can't hold
+   every source-specific field (Ahrefs `kd`/`traffic`, Search Console `ctr`). → A `raw_data`
+   text column preserves the full row for audit without widening the schema.
+10. **Single `cpc`, not a low/high range.** The generated inputs (and typical exports) carry
+    one CPC value per keyword. → The record stores a single `cpc`; a range can be added later
+    without breaking anything.
+11. **Language detection is a fallback, not the primary path.** Three of four sources carry a
+    language column and are trusted; only Search Console lacks one. → A small marker-word +
+    diacritic `LanguageDetector` fills the gap and defaults to English when nothing is
+    distinctive. It is deliberately simple and documented as such.
+12. **Verified the language → landing-URL map against the live site.** de/es/fr/it have
+    dedicated localized pages; `en` and `pt` resolve to real targets — notably Portuguese has
+    no `/pt` page and the live site serves it at `/pt-br/`. → The map lives in `params.php`
+    and is admin-overridable for stage 6.
+13. **Blank terms are skipped at import; character-junk is kept for the cleaning stage.** A
+    whitespace-only term is not a keyword, so it's skipped (counted in `rows_skipped`).
+    Junk that has actual characters (digits-only, single char, symbols) imports normally and
+    gets flagged with a `drop_reason` in stage 4, so the funnel can explain it.
 
 ## Build stages
 

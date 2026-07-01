@@ -8,16 +8,27 @@ use app\models\LoginForm;
 use Yii;
 use yii\base\Security;
 
+/**
+ * Login is validated against the env-driven admin (ADMIN_USERNAME / ADMIN_PASSWORD).
+ */
 final class LoginFormTest extends \Codeception\Test\Unit
 {
-    private $_model;
+    private ?LoginForm $_model = null;
 
-    protected function _after()
+    protected function _before(): void
     {
-        Yii::$app->user->logout();
+        putenv('ADMIN_USERNAME=admin');
+        putenv('ADMIN_PASSWORD=admin');
     }
 
-    public function testLoginNoUser()
+    protected function _after(): void
+    {
+        Yii::$app->user->logout();
+        putenv('ADMIN_USERNAME');
+        putenv('ADMIN_PASSWORD');
+    }
+
+    public function testLoginNoUser(): void
     {
         $this->_model = new LoginForm(
             new Security(),
@@ -31,12 +42,12 @@ final class LoginFormTest extends \Codeception\Test\Unit
         verify(Yii::$app->user->isGuest)->true();
     }
 
-    public function testLoginWrongPassword()
+    public function testLoginWrongPassword(): void
     {
         $this->_model = new LoginForm(
             new Security(),
             [
-                'username' => 'demo',
+                'username' => 'admin',
                 'password' => 'wrong_password',
             ],
         );
@@ -46,13 +57,13 @@ final class LoginFormTest extends \Codeception\Test\Unit
         verify($this->_model->errors)->arrayHasKey('password');
     }
 
-    public function testLoginCorrect()
+    public function testLoginCorrect(): void
     {
         $this->_model = new LoginForm(
             new Security(),
             [
-                'username' => 'demo',
-                'password' => 'demo',
+                'username' => 'admin',
+                'password' => 'admin',
             ],
         );
 

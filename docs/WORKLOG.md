@@ -4,11 +4,14 @@
 
 ## Current status
 
-- **Done:** project skeleton (Yii2 + PostgreSQL + Docker, live locally and via the public
-  tunnel); the four input files are generated from real Keyword Planner data under `sample-data/`.
-- **Next:** stage 3 — file import (CSV/JSON) against the real dataset, the `keyword` data
-  model, and an admin view (GridView) that shows all imported data.
-- **Live:** https://sitepro.dm312sv.online · local http://127.0.0.1:8100 (`admin` / `admin`)
+- **Done:** stage 3 — CSV/JSON import behind per-source adapters, the normalized `keyword`
+  model + `import_batch` history, and a login-gated admin area (upload, import history, and a
+  filterable/sortable keyword GridView). Admin credentials moved to `.env`. All four sample
+  files import (378 keywords); web login + upload verified.
+- **Next:** stage 4 — cleaning pipeline (junk → dedup → brand → volume), each rule flagging
+  rows with a `drop_reason`, plus a funnel dashboard.
+- **Live:** https://sitepro.dm312sv.online · local http://127.0.0.1:8100 (`admin` / `admin`,
+  from `.env`)
 
 ## Stages
 
@@ -16,7 +19,7 @@
 |---|-------|--------|
 | 1 | Data-access spike (validate real keyword metrics) | ✅ done |
 | 2 | Skeleton: Yii2 + PostgreSQL + Docker, admin login | ✅ done |
-| 3 | Import (CSV/JSON) + `keyword` model + admin GridView | ← current |
+| 3 | Import (CSV/JSON) + `keyword` model + admin GridView | ✅ done |
 | 4 | Cleaning pipeline + funnel dashboard | planned |
 | 5 | Prepare for Google Ads (already-used/forbidden/merge/group by language) | planned |
 | 6 | Ad generation (per language, correct URL) + cache | planned |
@@ -25,6 +28,42 @@
 | 9 | Deploy hardening + smoke | planned |
 
 ## Journal
+
+### 2026-07-01 — Stage 3: import + keyword model + admin GridView
+- **Schema:** two migrations — `import_batch` (one row per upload: source, filename, format,
+  row counts, status, message) and the central `keyword` table (raw + normalized term,
+  language/geo, volume/CPC/competition, competitor domain, source URL, clicks/impressions/
+  position, `raw_data` JSON, cleaning/prep flag columns for later stages, `stage`,
+  `drop_reason`, `dedup_group_id`).
+- **Import service** (`services/import/`): per-source adapters (Google Ads, Search Console,
+  Ahrefs organic, Ahrefs paid) map raw rows onto the unified record behind a common
+  interface; CSV/JSON readers plus a documented `ApiSourceReader` seam for "later, API".
+  Unknown columns are ignored; a missing required column fails the batch with a clear message.
+  Everything runs in one transaction; a failure is still recorded as a `failed` batch.
+- **Language:** three sources carry a language column and are trusted; Search Console has none,
+  so a small marker-word/diacritic `LanguageDetector` fills it (spot-checked correct on the
+  German/Spanish/etc. queries). `normalized_term` is lowercased, whitespace-collapsed, and
+  token-sorted (the dedup key for stage 5).
+- **Admin area** (login-gated): upload form + per-source summary + import history, and a full
+  keyword GridView with filters (source, language, stage, min volume), sorting, and pagination.
+- **Auth → env:** admin username/password now come from `.env` (`ADMIN_USERNAME` /
+  `ADMIN_PASSWORD`); no credentials hard-coded in PHP. `docker-compose.yml` reads all config
+  from `.env` (see `.env.example`); the bcrypt hash is computed only on the login path.
+- **Console parity:** `yii import/samples` and `yii import/file <source> <path>` run the same
+  service (proves it's decoupled from the web layer).
+- **Verified by hand:** migrations apply on container start; all four sample files import
+  (52 + 78 + 136 + 112 = 378 keywords; one blank-query Search Console row skipped by design);
+  guest → admin pages redirect to login; login with the `.env` credentials works; a JSON
+  upload through the web form imports; the GridView renders, filters, and sorts (screenshots).
+- **Post-build hardening** (from an adversarial code review of the import path, each fix
+  verified against crafted inputs): robust numeric parsing — decimals, scientific notation,
+  thousands separators handled; ambiguous values (`12,50`, `1.2K`) rejected as null instead of
+  silently mis-scaled; count columns widened to `bigint` so one over-range value no longer
+  aborts the file; non-UTF-8 (Windows-1252) CSV cells converted so the row imports and its
+  `raw_data` audit copy is preserved; duplicate CSV headers rejected with a clear message;
+  required-column check uses the union of keys across rows (correct for heterogeneous JSON);
+  the keyword grid's term and competition filters made functional; and the remember-me auth
+  key derived per-deployment instead of shipping a shared committed constant.
 
 ### 2026-07-01 — Sample dataset generated
 - Built the four input files from **real** Google Ads Keyword Planner data across six

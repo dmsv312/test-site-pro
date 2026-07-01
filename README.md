@@ -13,10 +13,16 @@ import file. Built with AI-assisted coding (#vibecoding).
 ## Quick start
 
 ```bash
-docker compose up --build -d      # → http://127.0.0.1:8100
+cp .env.example .env               # config: admin login, DB, cookie key (works as-is for local)
+docker compose up --build -d       # → http://127.0.0.1:8100
+
+# load the four sample keyword files (or upload them in the admin area)
+docker compose exec app php yii import/samples
 ```
 
-Admin login: `admin` / `admin`. Stop with `docker compose down` (add `-v` to reset data).
+Admin login comes from `.env` (`ADMIN_USERNAME` / `ADMIN_PASSWORD`; defaults `admin` / `admin`).
+Sign in, then **Import & data** → upload a CSV/JSON, and **Keywords** → browse everything
+imported. Stop with `docker compose down` (add `-v` to reset data).
 
 ## What it does
 

@@ -22,6 +22,16 @@ $items = [
         'url' => ['/site/contact'],
     ],
     [
+        'label' => 'Import & data',
+        'url' => ['/import/index'],
+        'visible' => !Yii::$app->user->isGuest,
+    ],
+    [
+        'label' => 'Keywords',
+        'url' => ['/import/keywords'],
+        'visible' => !Yii::$app->user->isGuest,
+    ],
+    [
         'label' => 'Login',
         'url' => ['/site/login'],
         'visible' => Yii::$app->user->isGuest,

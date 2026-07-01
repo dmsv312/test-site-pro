@@ -1,29 +1,52 @@
 # Import / export contracts
 
-> Status: **planned / partially implemented.** This is the target contract; the assignment
-> says "later we will use API", so import is designed contract-first behind adapters. See
-> `docs/PLAN.md` for how it fits the architecture, and `docs/DATA.md` for field meanings.
+> Status: **import implemented (stage 3); export planned.** The assignment says "later we will
+> use API", so import is built contract-first behind adapters. See `docs/PLAN.md` for how it
+> fits the architecture, and `docs/DATA.md` for field meanings.
 
 ## Import
 
 Every source (CSV, JSON, and — later — an external API) is normalized into the same
 `keyword` records through a source **adapter**. Adding a source means adding an adapter,
-not touching the pipeline.
+not touching the pipeline. All routes below are in the login-gated admin area.
 
-### Upload (CSV / JSON) — planned
+### Upload (CSV / JSON) — implemented
 
 ```
-POST /import
-  multipart/form-data:
-    file        the CSV or JSON export
-    source      one of: google_ads | search_console | ahrefs_organic | ahrefs_paid
-    format      csv | json   (auto-detected from the file when omitted)
-→ 200: { batch_id, source, rows_total, rows_imported, rows_skipped }
+POST /import/upload   (login-gated, CSRF-protected, multipart/form-data)
+  UploadForm[source]   one of: google_ads | search_console | ahrefs_organic | ahrefs_paid
+  UploadForm[file]     the CSV or JSON export (≤ 20 MB; format from the file extension)
+→ 302 → /import/keywords?KeywordSearch[batch_id]=<id>   on success
+      → /import/index with an error flash                on failure
 ```
+
+Each upload creates an `import_batch` row (`rows_total` / `rows_imported` / `rows_skipped` /
+`status` / `message`). Unknown columns are ignored; a missing required column fails the batch
+with a clear message. Required column per source: `keyword` (`query` for Search Console).
+
+### Admin routes
+
+```
+GET  /import/index      import form + per-source summary + import history
+GET  /import/keywords   the full keyword table (filter by source/language/stage/min volume, sort, paginate)
+POST /import/clear      wipe all imported data (for re-importing during a demo)
+```
+
+### Console (same service, no web layer)
+
+```
+yii import/samples [dir]          import all four sample-data files (default: /opt/sample-data)
+yii import/file <source> <path>   import one CSV/JSON file
+```
+
+### External API (future)
+
+`ApiSourceReader` is the wired-in seam: when Site.pro grants access to Search Console / Google
+Ads / Ahrefs, a live reader replaces a sample file there and the adapters + pipeline stay
+untouched. Not implemented yet.
 
 Accepted input columns per source and the normalized target fields are documented in
-`docs/DATA.md`. Unknown columns are ignored; missing required columns fail the batch with
-a clear error.
+`docs/DATA.md`.
 
 ### External API (future)
 

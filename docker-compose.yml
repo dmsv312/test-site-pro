@@ -1,16 +1,17 @@
-# Полный стек одной командой: docker compose up --build → http://127.0.0.1:8100
-# Прод-режим (YII_ENV=prod); наружу — через Cloudflare Tunnel (sitepro.dm312sv.online).
+# Full stack in one command: docker compose up --build → http://127.0.0.1:8100
+# Config comes from .env (see .env.example). Prod mode by default; exposed publicly
+# via a Cloudflare Tunnel (sitepro.dm312sv.online).
 services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: sitepro
-      POSTGRES_USER: sitepro
-      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: ${POSTGRES_DB:-sitepro}
+      POSTGRES_USER: ${POSTGRES_USER:-sitepro}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
     volumes:
       - dbdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sitepro"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sitepro}"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -22,21 +23,28 @@ services:
       db:
         condition: service_healthy
     environment:
-      YII_ENV: prod
-      YII_DEBUG: "false"
-      APP_URL: https://sitepro.dm312sv.online
-      COOKIE_VALIDATION_KEY: kZ3xR-siteproTEST-9qWmA2Yv7bL0cD
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_DATABASE: sitepro
-      DB_USERNAME: sitepro
-      DB_PASSWORD: secret
+      YII_ENV: ${YII_ENV:-prod}
+      YII_DEBUG: ${YII_DEBUG:-false}
+      APP_URL: ${APP_URL:-http://127.0.0.1:8100}
+      COOKIE_VALIDATION_KEY: ${COOKIE_VALIDATION_KEY:-}
+      # Admin credentials — sourced from .env, never hard-coded in PHP.
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      # Optional; when empty the app derives a per-deployment key (no shared committed secret).
+      ADMIN_AUTH_KEY: ${ADMIN_AUTH_KEY:-}
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE:-sitepro}
+      DB_USERNAME: ${DB_USERNAME:-sitepro}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
     volumes:
-      # Живой код с хоста (правки видны без пересборки).
+      # Live host code (edits visible without a rebuild).
       - ./backend:/var/www/html
-      # vendor — из образа (аноним. том): работает и при клоне без host-vendor.
+      # Sample input files, read-only, for the `yii import/samples` console command.
+      - ./sample-data:/opt/sample-data:ro
+      # vendor — from the image (anon volume): works on a fresh clone with no host vendor.
       - /var/www/html/vendor
-      # Пишущие пути — контейнерные тома (надёжно с правами, не зависит от хоста).
+      # Writable paths — container-managed volumes (reliable permissions, host-independent).
       - runtimedata:/var/www/html/runtime
       - webdata:/var/www/html/web
 
