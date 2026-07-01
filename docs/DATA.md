@@ -47,6 +47,23 @@ fail the batch with a clear message.
 
 Where a source lacks a language/market column, language is inferred by detection.
 
+## The generated dataset (`sample-data/`)
+
+The four inputs are generated and committed under [`sample-data/`](../sample-data/) (with
+JSON variants under `sample-data/json/`) — ready to upload in the admin area:
+
+| File | Rows | Real / sample |
+|------|-----:|---------------|
+| `google_ads_keywords.csv` | 52 | real volume/CPC (already-used set) |
+| `search_console_queries.csv` | 79 | sample metrics, real terms |
+| `ahrefs_organic_keywords.csv` | 136 | real volume/CPC; KD/pos/traffic sample |
+| `ahrefs_paid_keywords.csv` | 112 | real competitor volume/CPC |
+
+Real metrics come from Google Ads Keyword Planner across six languages (en, de, es, fr, pt,
+it) and five competitor domains. The set deliberately carries brand terms, duplicates, junk,
+low-volume rows, and forbidden examples so every cleaning rule is exercised. Details:
+[`sample-data/README.md`](../sample-data/README.md).
+
 ## Unified `keyword` schema
 
 Every source maps onto this record; the admin views and export read from it.

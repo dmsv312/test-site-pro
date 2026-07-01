@@ -4,10 +4,10 @@
 
 ## Current status
 
-- **Done:** project skeleton — Yii2 + PostgreSQL + Docker, running locally and via the
-  public tunnel; data-access validated against Google Ads Keyword Planner.
-- **Next:** stage 3 — file import (CSV/JSON), the `keyword` data model, and an admin
-  view (GridView) that shows all imported data.
+- **Done:** project skeleton (Yii2 + PostgreSQL + Docker, live locally and via the public
+  tunnel); the four input files are generated from real Keyword Planner data under `sample-data/`.
+- **Next:** stage 3 — file import (CSV/JSON) against the real dataset, the `keyword` data
+  model, and an admin view (GridView) that shows all imported data.
 - **Live:** https://sitepro.dm312sv.online · local http://127.0.0.1:8100 (`admin` / `admin`)
 
 ## Stages
@@ -21,10 +21,20 @@
 | 5 | Prepare for Google Ads (already-used/forbidden/merge/group by language) | planned |
 | 6 | Ad generation (per language, correct URL) + cache | planned |
 | 7 | Campaign preview + Google Ads Editor CSV export | planned |
-| 8 | Real data collection → input files + labeled samples | planned |
+| 8 | Real data collection → input files + labeled samples | ✅ done (early) |
 | 9 | Deploy hardening + smoke | planned |
 
 ## Journal
+
+### 2026-07-01 — Sample dataset generated
+- Built the four input files from **real** Google Ads Keyword Planner data across six
+  languages (en, de, es, fr, pt, it) plus five competitor domains (Wix, Squarespace, Weebly,
+  GoDaddy, Tilda): `sample-data/` — google_ads 52, search_console 79, ahrefs_organic 136,
+  ahrefs_paid 112 rows, with CSV and JSON variants.
+- Real search volume / CPC / competition; private account-specific metrics (GSC, Ahrefs KD)
+  are clearly-labeled samples. The set deliberately includes brand terms, duplicates, junk,
+  low-volume, and forbidden examples so every cleaning rule has real work. See
+  `sample-data/README.md` and `docs/DATA.md`.
 
 ### 2026-07-01 — Repo, tunnel, documentation
 - Initialized the git repository and pushed the skeleton to `github.com/dmsv312/test-site-pro`

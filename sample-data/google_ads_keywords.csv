@@ -1,0 +1,53 @@
+campaign,ad_group,keyword,match_type,language,avg_monthly_searches,competition,cpc,clicks,impressions,cost,status
+SitePro_EN_Search,Builder,website builder,Broad,en,165000,LOW,7.43,3300,99000,24519,Paused
+SitePro_EN_Search,Builder,web builder,Phrase,en,165000,LOW,7.43,3300,99000,24519,Enabled
+SitePro_EN_Search,Builder,website builder sites,Exact,en,165000,LOW,7.43,3300,99000,24519,Enabled
+SitePro_EN_Search,Builder,web page builder,Broad,en,165000,LOW,7.43,3300,99000,24519,Enabled
+SitePro_EN_Search,Builder,website builder site,Phrase,en,165000,LOW,7.43,3300,99000,24519,Enabled
+SitePro_EN_Search,Builder,websitebuilder site,Exact,en,165000,LOW,7.43,3300,99000,24519,Paused
+SitePro_EN_Search,Ecommerce,webstore builder,Broad,en,165000,LOW,7.43,3300,99000,24519,Enabled
+SitePro_EN_Search,General,develop web,Phrase,en,165000,LOW,5.57,3300,99000,18381,Enabled
+SitePro_DE_Search,Builder,webvisitenkarte erstellen,Broad,de,27100,HIGH,0.68,542,16260,368.56,Paused
+SitePro_DE_Search,Builder,website erstellen,Phrase,de,22200,HIGH,4.6,444,13320,2042.4,Enabled
+SitePro_DE_Search,Builder,webpage erstellen,Exact,de,22200,HIGH,4.6,444,13320,2042.4,Enabled
+SitePro_DE_Search,Builder,erstellen einer website,Broad,de,22200,HIGH,4.6,444,13320,2042.4,Enabled
+SitePro_DE_Search,General,webseiten erstellung,Phrase,de,22200,HIGH,4.6,444,13320,2042.4,Enabled
+SitePro_DE_Search,General,erstelle eine website,Exact,de,22200,HIGH,4.6,444,13320,2042.4,Paused
+SitePro_DE_Search,General,erstellung von webseiten,Broad,de,22200,HIGH,4.6,444,13320,2042.4,Enabled
+SitePro_DE_Search,Free,website erstellen kostenlos,Phrase,de,5400,HIGH,3.31,108,3240,357.48,Enabled
+SitePro_ES_Search,Templates,diseño web,Broad,es,5400,LOW,2.02,108,3240,218.16,Paused
+SitePro_ES_Search,Templates,diseños web,Phrase,es,5400,LOW,2.02,108,3240,218.16,Enabled
+SitePro_ES_Search,Templates,disenos web,Exact,es,5400,LOW,2.02,108,3240,218.16,Enabled
+SitePro_ES_Search,Builder,crear pagina web,Broad,es,4400,HIGH,1.9,88,2640,167.2,Enabled
+SitePro_ES_Search,General,pagina web crea,Phrase,es,4400,HIGH,1.9,88,2640,167.2,Enabled
+SitePro_ES_Search,General,creando paginas web,Exact,es,4400,HIGH,1.9,88,2640,167.2,Paused
+SitePro_ES_Search,Free,crear pagina web gratis,Broad,es,3600,HIGH,1.13,72,2160,81.36,Enabled
+SitePro_ES_Search,Free,crear pàgina web gratis,Phrase,es,3600,HIGH,1.13,72,2160,81.36,Enabled
+SitePro_FR_Search,General,créer un site internet,Broad,fr,5400,HIGH,2.42,108,3240,261.36,Paused
+SitePro_FR_Search,General,créer des sites internet,Phrase,fr,5400,HIGH,2.42,108,3240,261.36,Enabled
+SitePro_FR_Search,General,site internet créer,Exact,fr,5400,HIGH,2.42,108,3240,261.36,Enabled
+SitePro_FR_Search,General,créer un site sur internet,Broad,fr,5400,HIGH,2.42,108,3240,261.36,Enabled
+SitePro_FR_Search,Free,créer un site web gratuit,Phrase,fr,3600,HIGH,1.64,72,2160,118.08,Enabled
+SitePro_FR_Search,Free,créer site web gratuit,Exact,fr,3600,HIGH,1.64,72,2160,118.08,Paused
+SitePro_FR_Search,Free,créer un site web gratuitement,Broad,fr,3600,HIGH,1.64,72,2160,118.08,Enabled
+SitePro_FR_Search,Free,creer site web gratuit,Phrase,fr,3600,HIGH,1.64,72,2160,118.08,Enabled
+SitePro_PT_Search,Builder,criar site,Broad,pt,14800,HIGH,0.68,296,8880,201.28,Paused
+SitePro_PT_Search,Builder,site criar,Phrase,pt,14800,HIGH,0.68,296,8880,201.28,Enabled
+SitePro_PT_Search,General,crie um site,Exact,pt,14800,HIGH,0.68,296,8880,201.28,Enabled
+SitePro_PT_Search,General,cria sites,Broad,pt,14800,HIGH,0.68,296,8880,201.28,Enabled
+SitePro_PT_Search,Builder,site criador,Phrase,pt,14800,HIGH,0.68,296,8880,201.28,Enabled
+SitePro_PT_Search,Builder,criar s,Exact,pt,14800,HIGH,0.68,296,8880,201.28,Paused
+SitePro_PT_Search,Free,criar site gratis,Broad,pt,12100,HIGH,0.53,242,7260,128.26,Enabled
+SitePro_PT_Search,Free,criar site gratuito,Phrase,pt,12100,HIGH,0.53,242,7260,128.26,Enabled
+SitePro_IT_Search,Builder,creare sito web,Broad,it,3600,HIGH,2.57,72,2160,185.04,Paused
+SitePro_IT_Search,Builder,creare un sito web,Phrase,it,3600,HIGH,2.57,72,2160,185.04,Enabled
+SitePro_IT_Search,General,crea sito web,Exact,it,3600,HIGH,2.57,72,2160,185.04,Enabled
+SitePro_IT_Search,General,crea il sito web,Broad,it,3600,HIGH,2.57,72,2160,185.04,Enabled
+SitePro_IT_Search,Free,creare sito web gratis,Phrase,it,2900,HIGH,1.67,58,1740,96.86,Enabled
+SitePro_IT_Search,Free,creare un sito web gratis,Exact,it,2900,HIGH,1.67,58,1740,96.86,Paused
+SitePro_IT_Search,Free,crea un sito web gratis,Broad,it,2900,HIGH,1.67,58,1740,96.86,Enabled
+SitePro_IT_Search,Free,creatore di siti web gratis,Phrase,it,2900,HIGH,1.67,58,1740,96.86,Enabled
+SitePro_Brand,Brand,site.pro,Phrase,en,720,LOW,0.45,86,576,38.7,Enabled
+SitePro_Brand,Brand,sitepro,Phrase,en,480,LOW,0.45,58,384,26.1,Enabled
+SitePro_Brand,Brand,site.pro website builder,Phrase,en,210,LOW,0.45,25,168,11.25,Enabled
+SitePro_Brand,Brand,sitepro login,Phrase,en,390,LOW,0.45,47,312,21.15,Enabled
