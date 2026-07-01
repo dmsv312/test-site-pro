@@ -61,7 +61,7 @@ Components:
 | `brand_term`, `forbidden_term` | editable lists used by the brand / forbidden rules |
 | `rule_config` | thresholds (e.g. min volume) editable in the admin area |
 | `ad_group` | one language+theme bucket: language, theme (+ `theme_key`), campaign name, final URL, keyword count — fully derived from `keyword`, rebuilt each preparation run |
-| `generated_ad` | headlines/descriptions (JSON), paths, final URL, generated_by (claude/template) |
+| `generated_ad` | one RSA per ad group: headlines/descriptions (JSON), paths, final URL, generated_by (stored/template), is_valid — fully derived, rebuilt each run, cascades with its ad group |
 | `export_file` | produced export artifacts |
 
 Full field list and source→field mapping: [`DATA.md`](DATA.md).
@@ -229,15 +229,39 @@ Recorded as context → decision → consequence.
     ad groups not referenced by an `ad_ready` row, on the assumption that stage 6 advances an ad
     group to `ad_ready` as a whole (its keywords move together). No `ad_ready` rows exist yet, so
     today this is an exact full rebuild; stage 6 will confirm the whole-group advancement model.
+    **Superseded by decision 27.**
+
+27. **Ad generation is the tail of the pipeline; re-running preparation invalidates it (supersedes
+    26).** Stage 6 had to decide what a preparation re-run does to already-generated ads. Decision 26
+    assumed generation would advance an ad group to `ad_ready` and grouping would preserve those
+    groups — but that couples stage 6 to the stage-5 funnel math and risks a `theme_key` collision
+    when a re-clustered prepared group lands on a preserved `ad_ready` key. → Generation does **not**
+    change `keyword.stage`; ad-readiness is a property of the ad group (it has a valid `generated_ad`).
+    `generated_ad` is fully derived and **FK-CASCADEs on `ad_group`**, so a preparation re-run rebuilds
+    the groups and drops their ads — **re-prep invalidates stage 6 by design**, exactly the principle
+    decision 20 set for cleaning→preparation. `GroupingService` is therefore a plain full rebuild (its
+    `ad_ready`-preservation branch removed), the stage-5 counts stay untouched, and `STAGE_AD_READY`
+    is left reserved but unused. The operator re-runs generation after re-preparing, just as they
+    re-run preparation after re-cleaning.
+
+28. **Generated copy is untrusted; the target URL is authoritative from the ad group.** Ad copy comes
+    from stored offline-authored content or a template engine, and either could be malformed. → Every
+    ad clears `RsaValidator` (3–15 headlines ≤30 chars, 2–4 descriptions ≤90 chars, all distinct,
+    valid UTF-8 without control characters, display paths ≤15 chars) before it is stored, and the
+    `final_url` is copied from the ad group's verified localized URL — never taken from the generated
+    text — so a bad or hostile string can neither ship in the export nor redirect a campaign. Stored
+    copy that fails validation is discarded and the template used, recorded in the ad's `note`.
 
 ## Build stages
 
 See [`WORKLOG.md`](WORKLOG.md) for the stage table and live status. In short: spike ✅ →
-skeleton ✅ → import & model ✅ → cleaning ✅ → prepare ✅ → ad generation (next) → export → deploy.
+skeleton ✅ → import & model ✅ → cleaning ✅ → prepare ✅ → ad generation ✅ → export (next) → deploy.
 
 ## Open questions
 
-- Stage 6 target-URL granularity: keep the per-language homepage default, or add per-ad-group
-  (per-theme) landing overrides in the admin.
-- Whether stage 6 advances an ad group to `ad_ready` as a whole (assumed in decision 25) or lets a
-  group be partially generated.
+- Stage 7 export: keyword match type per row (broad / phrase / exact), and whether to emit one
+  combined Google Ads Editor CSV (keywords + RSA ads) or separate keyword and ad files.
+- Whether per-ad-group (per-theme) landing-URL overrides in the admin are worth adding, now that
+  the per-language default (decision 15) is confirmed to be enough for the demo.
+- A richer ad-copy source later (a live Claude Code CLI call at build time, or more stored copy for
+  the non-English languages) — the `StoredAdSource`/`TemplateAdGenerator` seam already supports it.

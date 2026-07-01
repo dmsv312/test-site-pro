@@ -4,17 +4,19 @@
 
 ## Current status
 
-- **Done:** stage 5 — preparation for Google Ads. Over the cleaned keywords it drops terms
-  Site.pro **already runs** (the `google_ads` source ⇒ only net-new remain) and any **forbidden**
-  term, keeps one canonical per duplicate group (highest volume — volume is not summed), then
-  **groups** the survivors into one campaign per language with **themed ad groups** (a
-  frequency-based token clusterer). Admin **funnel + campaign preview**, a `yii prepare/run`
-  console command, and unit tests for the new rules. 154 cleaned → 47 already-used dropped →
-  **107 prepared** → **19 ad groups across 6 languages**; idempotent. While building this we found
-  and fixed a stage-4↔5 dedup drift bug: cleaning is now a pure function of the imported data
-  (a run resets the whole downstream), so repeated clean→prepare cycles are stable. Reviewed
-  adversarially (one latent `ad_ready` link-preservation finding fixed).
-- **Next:** stage 6 — ad generation per ad group (in its language, correct target URL) + cache.
+- **Done:** stage 6 — ad generation. One **responsive search ad per ad group**, in the group's
+  language and pointing at its localized target URL. Copy is preferred from **stored,
+  offline-authored content** (a committed JSON keyed by `language:theme_key`, decision 3) and falls
+  back to a deterministic **per-language template engine**, so the deployed host needs no AI
+  credentials. Every ad — whichever source — must clear an **RSA validator** (≤30-char headlines,
+  ≤90-char descriptions, distinct, clean UTF-8) before it's stored, and the **target URL is
+  authoritative from the ad group, never the copy** (untrusted text can't redirect a campaign).
+  Admin **preview** + `yii adgen/run`; 22 new unit tests. 19 ad groups → **19 ads** (6 from stored
+  EN copy, 13 template), **0 invalid**, covering all **107** prepared keywords; idempotent.
+  Generation is the **tail** of the pipeline: re-running preparation rebuilds the ad groups and
+  cascades the ads away, so re-prep invalidates stage 6 by design (mirroring stage 4→5). Simplified
+  `GroupingService` to a plain full rebuild accordingly (decision 27 supersedes 26).
+- **Next:** stage 7 — campaign preview + Google Ads Editor CSV export (keywords + RSA ads).
 - **Live:** https://sitepro.dm312sv.online · local http://127.0.0.1:8100 (admin login from `.env`)
 
 ## Stages
@@ -26,12 +28,40 @@
 | 3 | Import (CSV/JSON) + `keyword` model + admin GridView | ✅ done |
 | 4 | Cleaning pipeline + funnel dashboard | ✅ done |
 | 5 | Prepare for Google Ads (already-used/forbidden/merge/group by language+theme) | ✅ done |
-| 6 | Ad generation (per language, correct URL) + cache | planned |
+| 6 | Ad generation (per language, correct URL) — stored/template + RSA validation | ✅ done |
 | 7 | Campaign preview + Google Ads Editor CSV export | planned |
 | 8 | Real data collection → input files + labeled samples | ✅ done (early) |
 | 9 | Deploy hardening + smoke | planned |
 
 ## Journal
+
+### 2026-07-01 — Stage 6: ad generation (stored/template + RSA validation)
+- **One responsive search ad per ad group** (`services/adgen/`, migration `generated_ad` +
+  `AdGroup.generatedAd`). For each group the service picks copy, applies the group's authoritative
+  target URL, validates, and stores it. Admin preview at `/ads`, console parity `yii adgen/run`.
+- **Two sources, template-first correctness.** `TemplateAdGenerator` is a deterministic engine with
+  per-language building blocks (en/de/es/fr/it/pt) that weaves the ad group's own theme token into a
+  couple of headlines and fills the rest from localized website-builder value props — always in the
+  group's language, always valid, no external call. `StoredAdSource` loads higher-quality copy
+  authored offline (a committed JSON keyed by `language:theme_key`) and is **preferred when present
+  and valid** (decision 3); anything absent or failing validation falls back to the template. So the
+  deployed host runs no generation and holds no AI credentials.
+- **All copy is untrusted input.** `RsaValidator` enforces Google's RSA limits before anything is
+  stored: 3–15 headlines ≤30 chars, 2–4 descriptions ≤90 chars, all distinct, valid UTF-8 with no
+  control characters. The **target URL is taken from the ad group, never the generated copy**, so a
+  bad string can't redirect a campaign. Optional display paths are length- and content-checked.
+- **Generation is the tail of the pipeline.** `generated_ad` is fully derived (rebuilt each run,
+  idempotent) and FK-CASCADEs on `ad_group`, so re-running preparation rebuilds the groups and drops
+  their ads — **re-prep invalidates stage 6 by design**, exactly as re-cleaning invalidates stage 5
+  (decision 20). This resolved the stage-5/6 coupling the plan had left open: `GroupingService`
+  dropped its `ad_ready`-group preservation for a plain full rebuild (decision **27 supersedes 26**),
+  which keeps the stage-5 funnel math untouched and avoids `theme_key` collisions.
+- **Verified by hand:** migration applies; 19 ad groups → **19 ads** (6 from stored EN copy, 13
+  template), **0 invalid**, covering all **107** prepared keywords; console and web agree. Re-running
+  preparation keeps 107/19 **and** cascades the ads to 0; re-generating restores 19 (three cycles
+  stable). The `/ads` page renders authenticated (200, no errors) with per-headline/description
+  character counts and the stored/template split. **22 new unit tests** (RsaValidator,
+  TemplateAdGenerator, StoredAdSource) — full unit suite **72 pass**.
 
 ### 2026-07-01 — Stage 5.1: pipeline-view grid + funnel consistency (UX pass)
 - **Reviewed the admin UI end-to-end** after stage 5 and closed the inconsistencies it exposed:

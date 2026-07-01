@@ -30,6 +30,11 @@ $items = [
         'visible' => !Yii::$app->user->isGuest,
     ],
     [
+        'label' => 'Ads',
+        'url' => ['/ads/index'],
+        'visible' => !Yii::$app->user->isGuest,
+    ],
+    [
         'label' => 'Rules',
         'url' => ['/rules/index'],
         'visible' => !Yii::$app->user->isGuest,

@@ -1,8 +1,9 @@
 # Import / export contracts
 
-> Status: **import implemented (stage 3); export planned.** The assignment says "later we will
-> use API", so import is built contract-first behind adapters. See `docs/PLAN.md` for how it
-> fits the architecture, and `docs/DATA.md` for field meanings.
+> Status: **import + cleaning + preparation + ad generation implemented (stages 3–6); export
+> planned (stage 7).** The assignment says "later we will use API", so import is built
+> contract-first behind adapters. See `docs/PLAN.md` for how it fits the architecture, and
+> `docs/DATA.md` for field meanings.
 
 ## Import
 
@@ -39,8 +40,17 @@ GET  /cleaning/index    cleaning funnel (junk → dedup → brand → volume) + 
 POST /cleaning/run      run cleaning; resets the downstream (see below)
 GET  /prepare/index     preparation funnel + campaign preview (languages → ad groups)
 POST /prepare/run       drop already-used/forbidden → keep canonicals → group by language + theme
+GET  /ads/index         generated-ads preview (per language → ad groups → RSA copy + char counts)
+POST /ads/run           (re)generate one responsive search ad per ad group
 GET  /rules/index       editable thresholds + brand / forbidden term lists
 ```
+
+Ad generation (`/ads/run`) writes one responsive search ad per ad group: it prefers stored,
+offline-authored copy (a committed JSON keyed by `language:theme_key`) and falls back to a
+deterministic per-language template engine, so the deployed host needs no AI credentials. Every ad
+is re-validated against the RSA limits before it is stored, and the target URL is taken from the ad
+group (never the copy). Like preparation, ad generation is fully derived and rebuilt each run;
+re-running preparation rebuilds the ad groups and cascades the ads away.
 
 Cleaning is the head of the pipeline: `POST /cleaning/run` recomputes from the imported data and
 **resets stage 5** (preparation), so after re-cleaning, run `/prepare/run` again.
@@ -52,6 +62,7 @@ yii import/samples [dir]          import all four sample-data files (default: /o
 yii import/file <source> <path>   import one CSV/JSON file
 yii clean/run                     run the cleaning pipeline (resets stage 5)
 yii prepare/run                   run preparation: drops → merge → group by language + theme
+yii adgen/run                     generate one RSA per ad group (stored copy preferred, template fallback)
 ```
 
 ### External API (future)

@@ -49,18 +49,13 @@ final class GroupingService
         $transaction = $db->beginTransaction();
 
         try {
-            // Rebuild the prepared set's campaigns only. A later stage advances an ad group to
-            // `ad_ready` as a whole (its keywords move together), and those groups + links are left
-            // intact here, so a re-run never wipes a stage-6 campaign. No `ad_ready` rows exist yet,
-            // so today this is an exact full rebuild — but the scope already matches what
-            // PreparationService declares it owns (`cleaned`/`prepared`, never `ad_ready`).
-            $adReadyGroupIds = Keyword::find()
-                ->select('ad_group_id')
-                ->where(['stage' => Keyword::STAGE_AD_READY])
-                ->andWhere(['not', ['ad_group_id' => null]])
-                ->distinct();
-            Keyword::updateAll(['ad_group_id' => null], ['stage' => Keyword::STAGE_PREPARED]);
-            AdGroup::deleteAll(['not in', 'id', $adReadyGroupIds]);
+            // `ad_group` is fully derived: wipe it and rebuild from the current prepared set. Ad
+            // generation (stage 6) is the tail of the pipeline, so deleting an ad group cascades its
+            // generated ad away — re-running preparation invalidates stage 6 by design, exactly as
+            // re-running cleaning invalidates stage 5 (PLAN decision 20/27). Clearing the keyword
+            // links first keeps them consistent even though the FK would `SET NULL` on delete.
+            Keyword::updateAll(['ad_group_id' => null], ['not', ['ad_group_id' => null]]);
+            AdGroup::deleteAll();
 
             /** @var Keyword[] $prepared */
             $prepared = Keyword::find()->where(['stage' => Keyword::STAGE_PREPARED])->all();

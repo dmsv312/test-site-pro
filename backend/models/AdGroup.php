@@ -21,6 +21,7 @@ use yii\db\ActiveRecord;
  * @property int $created_at
  *
  * @property-read Keyword[] $keywords
+ * @property-read GeneratedAd|null $generatedAd
  */
 class AdGroup extends ActiveRecord
 {
@@ -34,5 +35,11 @@ class AdGroup extends ActiveRecord
     {
         return $this->hasMany(Keyword::class, ['ad_group_id' => 'id'])
             ->orderBy(['avg_monthly_searches' => SORT_DESC, 'normalized_term' => SORT_ASC]);
+    }
+
+    /** The responsive search ad generated for this group (stage 6), if any. @return \yii\db\ActiveQuery */
+    public function getGeneratedAd()
+    {
+        return $this->hasOne(GeneratedAd::class, ['ad_group_id' => 'id']);
     }
 }

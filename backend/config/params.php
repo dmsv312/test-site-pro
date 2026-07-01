@@ -19,4 +19,10 @@ return [
         'pt' => 'https://site.pro/pt-br/',
     ],
     'defaultLandingUrl' => 'https://site.pro/',
+
+    // Offline-authored ad copy preferred by stage-6 generation (decision 3): a committed JSON file
+    // keyed by "{language}:{theme_key}". Shipped as an artifact in sample-data (mounted read-only at
+    // /opt/sample-data); anything without an entry falls back to the template engine. Missing file =
+    // template-only, no error.
+    'storedAdsPath' => '/opt/sample-data/generated-ads.json',
 ];

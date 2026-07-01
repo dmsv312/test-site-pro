@@ -18,6 +18,11 @@ docker compose up --build -d       # → http://127.0.0.1:8100
 
 # load the four sample keyword files (or upload them in the admin area)
 docker compose exec app php yii import/samples
+
+# run the pipeline (or use the admin pages: Cleaning → Prepare → Ads)
+docker compose exec app php yii clean/run        # junk · dedup · brand · volume
+docker compose exec app php yii prepare/run      # drop used/forbidden · merge · group by language
+docker compose exec app php yii adgen/run        # one responsive search ad per ad group
 ```
 
 Admin login comes from `.env` (`ADMIN_USERNAME` / `ADMIN_PASSWORD`; defaults `admin` / `admin`).

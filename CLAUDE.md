@@ -25,7 +25,9 @@ Sources (CSV/JSON now, API later)
   → Cleaning pipeline (junk → dedup → brand → volume) — every drop logged with a reason
   → Preparation (drop already-used/forbidden → keep one canonical per dup group → group by
     language into one campaign each, with themed ad groups)
-  → Ad generation (per language, correct target URL) via a local Claude Code CLI
+  → Ad generation (one RSA per ad group, in its language + the group's URL): stored offline-authored
+    copy preferred, deterministic per-language template fallback, all RSA-validated; URL from the
+    ad group, never the copy
   → Preview + export (Google Ads Editor CSV)
 ```
 
@@ -42,12 +44,12 @@ marketing pages — the stock Yii home/about/contact scaffold was removed.
 ```
 backend/                Yii2 application
   config/               web.php, console.php, db.php (env-driven), params.php (lang→URL map)
-  controllers/          SiteController (login/logout/error); ImportController, CleaningController, PrepareController, RulesController (login-gated admin)
-  commands/             console controllers (import/samples, import/file; clean/run; prepare/run)
-  models/               ActiveRecord (Keyword, ImportBatch, AdGroup, RuleConfig, BrandTerm/ForbiddenTerm via TermListRecord) + form models (UploadForm, KeywordSearch, User, Login)
-  migrations/           schema — import_batch + keyword (stage 3); rule_config + brand_term + forbidden_term (stage 4); ad_group + keyword.ad_group_id (stage 5)
-  services/             import/ (readers, adapters, ImportService); cleaning/ (JunkRule, BrandRule, VolumeRule, CleaningService); preparation/ (AlreadyUsedRule, ForbiddenRule, ThemeClusterer, GroupingService, PreparationService); ad-gen/export come later
-  views/                site/ (login, error), import/ (dashboard, keywords), cleaning/ (funnel), prepare/ (funnel + campaign preview), rules/ (thresholds + lists)
+  controllers/          SiteController (login/logout/error); ImportController, CleaningController, PrepareController, AdsController, RulesController (login-gated admin)
+  commands/             console controllers (import/samples, import/file; clean/run; prepare/run; adgen/run)
+  models/               ActiveRecord (Keyword, ImportBatch, AdGroup, GeneratedAd, RuleConfig, BrandTerm/ForbiddenTerm via TermListRecord) + form models (UploadForm, KeywordSearch, User, Login)
+  migrations/           schema — import_batch + keyword (stage 3); rule_config + brand_term + forbidden_term (stage 4); ad_group + keyword.ad_group_id (stage 5); generated_ad (stage 6)
+  services/             import/ (readers, adapters, ImportService); cleaning/ (JunkRule, BrandRule, VolumeRule, CleaningService); preparation/ (AlreadyUsedRule, ForbiddenRule, ThemeClusterer, GroupingService, PreparationService); adgen/ (AdContent, RsaValidator, TemplateAdGenerator, StoredAdSource, AdGenerationService); export comes later
+  views/                site/ (login, error), import/ (dashboard, keywords), cleaning/ (funnel), prepare/ (funnel + campaign preview), ads/ (RSA preview), rules/ (thresholds + lists)
   web/                  front controller + published assets
   docker/entrypoint.sh  waits for DB, refreshes static, runs migrations, starts php-fpm
   Dockerfile            php:8.4-fpm + ext (pdo_pgsql, intl, gd, …) + composer install
@@ -65,6 +67,7 @@ docker compose exec app php yii migrate   # run migrations manually (also run on
 docker compose exec app php yii import/samples   # import the four sample-data files
 docker compose exec app php yii clean/run        # run the cleaning pipeline (junk→dedup→brand→volume); resets stage 5
 docker compose exec app php yii prepare/run      # prepare for Google Ads (drop already-used/forbidden → group by language+theme)
+docker compose exec app php yii adgen/run        # generate one RSA per ad group (stored copy preferred, template fallback); resets on re-prepare
 docker compose logs -f app                # app (php-fpm) logs
 docker compose down                       # stop (keep data);  down -v to reset volumes
 ```

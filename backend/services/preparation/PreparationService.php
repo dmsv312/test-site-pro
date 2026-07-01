@@ -16,10 +16,10 @@ use app\models\Keyword;
  * rule wins, so each dropped row carries exactly one reason and the stage counts stay disjoint.
  *
  * Scope: preparation owns the rows cleaning handed off — stage `cleaned` (candidates) and
- * `prepared` (survivors of a previous run). It never touches rows still `imported` (dropped by
- * cleaning) or an `ad_ready` row a later stage advanced. The run is idempotent: it resets stage-5
- * state for owned rows first, then recomputes, so editing the forbidden list and re-running is
- * deterministic.
+ * `prepared` (survivors of a previous run) — and never touches rows still `imported` (dropped by
+ * cleaning). Stage 6 attaches ads to the derived ad groups, not to the keyword stage, so the
+ * campaign-ready set stays at `prepared`. The run is idempotent: it resets stage-5 state for owned
+ * rows first, then recomputes, so editing the forbidden list and re-running is deterministic.
  *
  * Merge: dedup (stage 4) already collapsed every duplicate group to its highest-volume canonical,
  * so the surviving representative already carries the group's true (max) volume — exactly the

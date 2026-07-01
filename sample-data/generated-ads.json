@@ -1,0 +1,135 @@
+{
+  "_comment": "Offline-authored responsive-search-ad copy (stage 6, decision 3). Keyed by '{language}:{theme_key}'. Preferred by AdGenerationService when the entry passes RsaValidator; anything absent or invalid falls back to the deterministic template engine, so the deployed host needs no AI credentials. Authored locally with a Claude Code CLI. Headlines <=30 chars, descriptions <=90; the app re-validates before storing.",
+
+  "en:website": {
+    "headlines": [
+      "Build Your Website",
+      "Website Builder",
+      "Free Website Builder",
+      "Launch Your Website",
+      "Website in Minutes",
+      "No-Code Website",
+      "Mobile-Ready Website",
+      "Start Your Site Free",
+      "Pro Templates",
+      "Site.pro"
+    ],
+    "descriptions": [
+      "Build a professional website in minutes with Site.pro. No coding — start free today.",
+      "Drag-and-drop website builder, mobile-ready templates and hosting. Launch today.",
+      "Create, publish and grow your website. Hundreds of templates, free to start."
+    ],
+    "path1": "Website",
+    "path2": "Builder"
+  },
+
+  "en:builder": {
+    "headlines": [
+      "Website Builder",
+      "Free Website Builder",
+      "Drag-and-Drop Builder",
+      "Build Your Site",
+      "No-Code Builder",
+      "Site Builder Online",
+      "Launch in Minutes",
+      "Try It Free",
+      "Pro Templates",
+      "Site.pro Builder"
+    ],
+    "descriptions": [
+      "Build a website with an easy drag-and-drop builder. Templates, hosting, free to start.",
+      "Site.pro's website builder: no coding, mobile-ready templates, live in minutes.",
+      "Create a professional site with our builder. Publish today, no experience needed."
+    ],
+    "path1": "Website",
+    "path2": "Builder"
+  },
+
+  "en:free": {
+    "headlines": [
+      "Free Website Builder",
+      "Build a Site Free",
+      "Start for Free",
+      "Free Templates",
+      "No-Cost Website",
+      "Free Hosting Included",
+      "Launch Free Today",
+      "Website, Free to Start",
+      "Try Site.pro Free",
+      "Free & Easy"
+    ],
+    "descriptions": [
+      "Build your website free with Site.pro. Templates and hosting included — no coding.",
+      "Start a professional site at no cost. Drag-and-drop, mobile-ready, live in minutes.",
+      "Free website builder with hundreds of templates. Publish today, upgrade anytime."
+    ],
+    "path1": "Free",
+    "path2": "Website"
+  },
+
+  "en:business": {
+    "headlines": [
+      "Business Website",
+      "Build a Business Site",
+      "Website for Business",
+      "Grow Your Business",
+      "Pro Business Templates",
+      "Launch in Minutes",
+      "No-Code Website",
+      "Start Free Today",
+      "Mobile-Ready Site",
+      "Site.pro for Business"
+    ],
+    "descriptions": [
+      "Build a professional business website in minutes with Site.pro. No coding needed.",
+      "Templates for every business, hosting and mobile-ready design. Start free today.",
+      "Grow your business online with a modern website. Drag-and-drop, live in minutes."
+    ],
+    "path1": "Business",
+    "path2": "Website"
+  },
+
+  "en:web": {
+    "headlines": [
+      "Build Your Web Site",
+      "Web Design Made Easy",
+      "Free Web Builder",
+      "Your Website Online",
+      "No-Code Web Design",
+      "Web Templates",
+      "Launch on the Web",
+      "Start Free Today",
+      "Mobile-Ready Web",
+      "Site.pro"
+    ],
+    "descriptions": [
+      "Build your web presence in minutes with Site.pro. No coding — templates included.",
+      "Easy web design: drag-and-drop, mobile-ready templates and hosting. Start free.",
+      "Create and publish your website on the web today. Hundreds of templates, free."
+    ],
+    "path1": "Web",
+    "path2": "Design"
+  },
+
+  "en:general": {
+    "headlines": [
+      "Build Your Website",
+      "Free Website Builder",
+      "Launch in Minutes",
+      "No Coding Required",
+      "Drag-and-Drop Editor",
+      "Mobile-Ready Templates",
+      "Start Free Today",
+      "Go Online Fast",
+      "Pro Templates",
+      "Site.pro"
+    ],
+    "descriptions": [
+      "Create a professional website in minutes with Site.pro. No coding — start free.",
+      "Drag-and-drop builder, mobile-ready templates and hosting. Launch your site today.",
+      "Build, publish and grow your website with Site.pro. Free to start, easy to use."
+    ],
+    "path1": "Website",
+    "path2": "Builder"
+  }
+}
