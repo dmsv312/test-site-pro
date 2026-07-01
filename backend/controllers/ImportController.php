@@ -99,7 +99,7 @@ class ImportController extends Controller
                 . " (skipped {$batch->rows_skipped}).",
             );
 
-            return $this->redirect(['keywords', 'KeywordSearch[batch_id]' => $batch->id]);
+            return $this->redirect(['keywords', 'KeywordSearch' => ['batch_id' => $batch->id, 'status' => 'all']]);
         }
 
         Yii::$app->session->setFlash('error', "Import failed: {$batch->message}");

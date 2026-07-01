@@ -47,6 +47,9 @@
   regress a later stage. Console parity: `yii clean/run`.
 - **Funnel dashboard** (`/cleaning`): imported → after junk → after dedup → after brand → cleaned,
   with a drop-reason breakdown that links into the keyword grid (now filterable by `drop_reason`).
+- **Keyword grid UX:** a Kept / Dropped / All toggle (defaults to **Kept**, the clean ad-candidate
+  set, so dropped junk no longer clutters the default view), and a proper Bootstrap pager instead
+  of the cramped default. Import and funnel drill-in links open the relevant view explicitly.
 - **Verified by hand:** 378 → 154 kept (6 junk incl. the planted keyboard-mash row, 189 duplicate,
   21 brand, 8 below volume); a second run is identical; no row carries more than one flag; no
   brand term leaks into the kept set. Unit tests for all three rules (38 tests pass).

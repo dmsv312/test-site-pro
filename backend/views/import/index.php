@@ -65,7 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php endforeach; ?>
                 </div>
                 <div class="d-flex gap-2 mt-3 flex-wrap">
-                    <?= Html::a('View all keywords', ['keywords'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+                    <?= Html::a('View all keywords', ['keywords', 'KeywordSearch' => ['status' => 'all']], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
                     <?= Html::a('Clear all data', ['clear'], [
                         'class' => 'btn btn-outline-danger btn-sm ms-auto',
                         'data' => [
@@ -123,7 +123,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'buttons' => [
                 'view' => static fn($url, ImportBatch $b): string => Html::a(
                     'keywords',
-                    ['keywords', 'KeywordSearch[batch_id]' => $b->id],
+                    ['keywords', 'KeywordSearch' => ['batch_id' => $b->id, 'status' => 'all']],
                     ['class' => 'btn btn-sm btn-outline-primary'],
                 ),
             ],

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use app\models\Keyword;
+use app\models\KeywordSearch;
 use yii\grid\GridView;
 use yii\helpers\Html;
 
@@ -16,6 +17,15 @@ $this->params['breadcrumbs'][] = ['label' => 'Import & data', 'url' => ['index']
 $this->params['breadcrumbs'][] = $this->title;
 
 $stageOptions = array_combine(Keyword::STAGES, Keyword::STAGES);
+
+// Kept / Dropped / All toggle. Preserve the current filters (source, language, …) and reset paging.
+$statusTabs = [
+    KeywordSearch::STATUS_KEPT => 'Kept',
+    KeywordSearch::STATUS_DROPPED => 'Dropped',
+    KeywordSearch::STATUS_ALL => 'All',
+];
+$currentStatus = $searchModel->effectiveStatus();
+$currentFilters = Yii::$app->request->queryParams['KeywordSearch'] ?? [];
 ?>
 <h1><?= Html::encode($this->title) ?></h1>
 <p class="text-muted">
@@ -24,14 +34,27 @@ $stageOptions = array_combine(Keyword::STAGES, Keyword::STAGES);
     rather than deleting them — see the <?= Html::a('funnel', ['/cleaning/index']) ?>.
 </p>
 
-<p>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div class="btn-group btn-group-sm" role="group" aria-label="Keyword status">
+        <?php foreach ($statusTabs as $key => $label): ?>
+            <?= Html::a(
+                $label,
+                ['keywords', 'KeywordSearch' => array_merge($currentFilters, ['status' => $key])],
+                ['class' => 'btn ' . ($currentStatus === $key ? 'btn-primary' : 'btn-outline-primary')],
+            ) ?>
+        <?php endforeach; ?>
+    </div>
     <?= Html::a('← Back to import', ['index'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
-</p>
+</div>
 
 <?= GridView::widget([
     'dataProvider' => $dataProvider,
     'filterModel' => $searchModel,
     'tableOptions' => ['class' => 'table table-striped table-bordered table-sm align-middle'],
+    'pager' => [
+        'class' => yii\bootstrap5\LinkPager::class,
+        'maxButtonCount' => 10,
+    ],
     'columns' => [
         ['attribute' => 'id', 'headerOptions' => ['style' => 'width:70px']],
         [

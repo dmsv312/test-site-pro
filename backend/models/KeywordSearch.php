@@ -16,12 +16,30 @@ class KeywordSearch extends Keyword
     /** Virtual filter: minimum average monthly searches. */
     public int|string|null $minVolume = null;
 
+    /** Virtual filter: kept | dropped | all (see {@see effectiveStatus()}). Defaults to kept. */
+    public ?string $status = null;
+
+    public const STATUS_KEPT = 'kept';
+    public const STATUS_DROPPED = 'dropped';
+    public const STATUS_ALL = 'all';
+
     public function rules(): array
     {
         return [
-            [['source', 'language', 'stage', 'raw_term', 'competition', 'competitor_domain', 'drop_reason'], 'safe'],
+            [['source', 'language', 'stage', 'raw_term', 'competition', 'competitor_domain', 'drop_reason', 'status'], 'safe'],
             [['batch_id', 'minVolume'], 'integer'],
         ];
+    }
+
+    /**
+     * The chosen status, defaulting to "kept" so the grid shows the clean, ad-candidate set
+     * unless the viewer explicitly asks for dropped/all. Unknown values fall back to kept.
+     */
+    public function effectiveStatus(): string
+    {
+        return in_array($this->status, [self::STATUS_DROPPED, self::STATUS_ALL], true)
+            ? $this->status
+            : self::STATUS_KEPT;
     }
 
     /** Bypass the parent's required-field scenario; all filter fields are safe. */
@@ -68,6 +86,14 @@ class KeywordSearch extends Keyword
 
         if ($this->minVolume !== null && $this->minVolume !== '') {
             $query->andWhere(['>=', 'avg_monthly_searches', (int) $this->minVolume]);
+        }
+
+        // Kept = survived cleaning; Dropped = flagged by a rule (has a reason); All = no filter.
+        $status = $this->effectiveStatus();
+        if ($status === self::STATUS_KEPT) {
+            $query->andWhere(['stage' => Keyword::STAGE_CLEANED]);
+        } elseif ($status === self::STATUS_DROPPED) {
+            $query->andWhere(['not', ['drop_reason' => null]]);
         }
 
         return $dataProvider;

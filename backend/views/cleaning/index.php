@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use yii\helpers\Html;
-use yii\helpers\Url;
 
 /** @var yii\web\View $this */
 /** @var array<string, mixed> $summary */
@@ -95,7 +94,7 @@ $reasons = $summary['reasons'];
                                 <td>
                                     <?= Html::a(
                                         Html::encode($r['drop_reason']),
-                                        ['/import/keywords', 'KeywordSearch[drop_reason]' => $r['drop_reason']],
+                                        ['/import/keywords', 'KeywordSearch' => ['drop_reason' => $r['drop_reason'], 'status' => 'all']],
                                         ['class' => 'text-decoration-none'],
                                     ) ?>
                                 </td>
@@ -111,8 +110,10 @@ $reasons = $summary['reasons'];
 </div>
 
 <p class="mt-4">
-    <?= Html::a('View all keywords →', ['/import/keywords'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
-    <?= Html::a('Kept only →', Url::to(['/import/keywords', 'KeywordSearch[stage]' => 'cleaned']), [
+    <?= Html::a('View all keywords →', ['/import/keywords', 'KeywordSearch' => ['status' => 'all']], [
+        'class' => 'btn btn-outline-secondary btn-sm',
+    ]) ?>
+    <?= Html::a('Kept only →', ['/import/keywords', 'KeywordSearch' => ['status' => 'kept']], [
         'class' => 'btn btn-outline-success btn-sm',
     ]) ?>
 </p>
