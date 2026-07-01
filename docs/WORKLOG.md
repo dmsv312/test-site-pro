@@ -10,8 +10,7 @@
   files import (378 keywords); web login + upload verified.
 - **Next:** stage 4 — cleaning pipeline (junk → dedup → brand → volume), each rule flagging
   rows with a `drop_reason`, plus a funnel dashboard.
-- **Live:** https://sitepro.dm312sv.online · local http://127.0.0.1:8100 (`admin` / `admin`,
-  from `.env`)
+- **Live:** https://sitepro.dm312sv.online · local http://127.0.0.1:8100 (admin login from `.env`)
 
 ## Stages
 
