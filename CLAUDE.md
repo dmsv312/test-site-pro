@@ -32,17 +32,21 @@ Thin controllers → **service layer** holds the logic; ActiveRecord models for 
 admin area (login-gated) shows every stage; a funnel shows how many keywords survive each
 step and why the rest were dropped.
 
+The **whole app is login-gated**: `defaultRoute` is `import/index`, so the home page opens the
+import dashboard, and a guest hitting any page is redirected to login. There are no public
+marketing pages — the stock Yii home/about/contact scaffold was removed.
+
 ## Structure
 
 ```
 backend/                Yii2 application
   config/               web.php, console.php, db.php (env-driven), params.php (lang→URL map)
-  controllers/          thin controllers (SiteController, ImportController = admin area)
+  controllers/          SiteController (login/logout/error only), ImportController (login-gated admin area)
   commands/             console controllers (ImportController: import/samples, import/file)
   models/               ActiveRecord (Keyword, ImportBatch) + form models (UploadForm, KeywordSearch, User, Login)
   migrations/           schema — import_batch + keyword (stage 3)
   services/             import/ (readers, adapters, ImportService); cleaning/prepare/ad-gen/export come later
-  views/                admin UI (site/, import/)
+  views/                site/ (login, error), import/ (dashboard, keywords)
   web/                  front controller + published assets
   docker/entrypoint.sh  waits for DB, refreshes static, runs migrations, starts php-fpm
   Dockerfile            php:8.4-fpm + ext (pdo_pgsql, intl, gd, …) + composer install

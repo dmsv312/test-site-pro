@@ -29,6 +29,17 @@
 
 ## Journal
 
+### 2026-07-01 — Portal cleanup + login-only access
+- Removed the stock Yii scaffold (home/about/contact pages, the contact form + mailer, and Yii
+  branding in the header, footer, and login page) so the site shows only what the assignment
+  needs. Visuals otherwise unchanged.
+- The whole app is now behind login: `defaultRoute` → `import/index`, and `SiteController` keeps
+  only `login` / `logout` / `error`. A guest opening any page (including `/`) is redirected to
+  the login screen. Verified: guest `/`, `/import/index`, `/import/keywords` → 302 to login;
+  removed `/site/about` and `/site/contact` → 404.
+- Trimmed the stock tests that covered the removed pages/mailer; kept the auth unit tests
+  (`UserTest`, `LoginFormTest`) and the Alert widget test.
+
 ### 2026-07-01 — Stage 3: import + keyword model + admin GridView
 - **Schema:** two migrations — `import_batch` (one row per upload: source, filename, format,
   row counts, status, message) and the central `keyword` table (raw + normalized term,
