@@ -20,6 +20,11 @@ $items = [
         'visible' => !Yii::$app->user->isGuest,
     ],
     [
+        'label' => 'Rules',
+        'url' => ['/rules/index'],
+        'visible' => !Yii::$app->user->isGuest,
+    ],
+    [
         'label' => 'Logout (' . Html::encode(Yii::$app->user->identity?->username ?? '') . ')',
         'url' => ['/site/logout'],
         'linkOptions' => [

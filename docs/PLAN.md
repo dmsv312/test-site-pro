@@ -105,8 +105,9 @@ Recorded as context → decision → consequence.
    Metrics are baked into the input files; the deployed app only imports files.
 6. **Private account exports are simulated as clearly-labeled samples.** We don't have
    Site.pro's live Ads account, Search Console, or Ahrefs subscription. → Those sources ship
-   as labeled sample files; the `ApiAdapter` seam replaces them with real feeds when access
-   is granted. See [`DATA.md`](DATA.md).
+   as labeled sample files and stay that way (finalized in decision 14 — access won't be
+   granted); the `ApiAdapter` seam is the documented extension point, kept to satisfy the
+   assignment's "later API" rather than a feed we expect to receive. See [`DATA.md`](DATA.md).
 7. **Dev volume layout.** Host-mounted source for live edits; container-managed volumes for
    `vendor` / `runtime` / `web`. → Fast iteration locally, and a fresh clone runs without any
    host state.
@@ -132,6 +133,21 @@ Recorded as context → decision → consequence.
     whitespace-only term is not a keyword, so it's skipped (counted in `rows_skipped`).
     Junk that has actual characters (digits-only, single char, symbols) imports normally and
     gets flagged with a `drop_reason` in stage 4, so the funnel can explain it.
+14. **No access to Site.pro's private accounts — those sources stay samples permanently.** We
+    will not get Site.pro's live Ads keyword list, Search Console, or Ahrefs subscription, and
+    there is no one to grant it. → Those three sources remain clearly-labeled sample files for
+    good; we never present them as real. The real Keyword Planner metrics (volume / CPC /
+    competition) stay real and labeled as such — that distinction doesn't change. The
+    `ApiAdapter` seam is kept solely to satisfy the assignment's "later we will use API": a
+    demonstrated extension point, **not** a feed we are waiting on. Supersedes the optimistic
+    "when access is granted" framing in decision 6.
+15. **Target URL per language: verified localized Site.pro homepages by default, overridable
+    per language in the admin area.** Site.pro won't provide exact per-keyword landing pages,
+    and there is no one to confirm canonical deep links with. → The default target for each
+    language group is the verified localized homepage (`en` → `/`, `de`/`es`/`fr`/`it` →
+    `/xx/`, `pt` → `/pt-br/`; the map from decision 12), and the admin area can override the
+    URL per language. We don't invent canonical URLs we can't confirm; the homepage is the
+    honest, working default.
 
 ## Build stages
 
@@ -140,7 +156,4 @@ skeleton ✅ → import & model (current) → cleaning → prepare → ad genera
 
 ## Open questions
 
-- Canonical Site.pro landing URLs per language (or an agreed convention).
-- Whether Site.pro will grant real access to their Search Console / Ads / Ahrefs (turns
-  samples into real feeds).
 - Which languages / markets to showcase in the preview.
