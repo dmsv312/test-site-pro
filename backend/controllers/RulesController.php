@@ -11,6 +11,7 @@ use app\models\RuleConfig;
 use app\models\TermListRecord;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
+use yii\helpers\Html;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
@@ -93,7 +94,10 @@ class RulesController extends Controller
         $model->load(Yii::$app->request->post());
 
         if ($model->save()) {
-            Yii::$app->session->setFlash('success', "Added “{$model->term}” to the {$list} list.");
+            Yii::$app->session->setFlash(
+                'success',
+                'Added “' . Html::encode($model->term) . "” to the {$list} list.",
+            );
         } else {
             Yii::$app->session->setFlash('error', implode(' ', $model->getFirstErrors()));
         }
@@ -107,7 +111,10 @@ class RulesController extends Controller
         $model = $this->findTerm($list, $id);
         $term = $model->term;
         $model->delete();
-        Yii::$app->session->setFlash('success', "Removed “{$term}” from the {$list} list.");
+        Yii::$app->session->setFlash(
+            'success',
+            'Removed “' . Html::encode($term) . "” from the {$list} list.",
+        );
 
         return $this->redirect(['index']);
     }

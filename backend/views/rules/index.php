@@ -83,7 +83,7 @@ $termList = function (string $list, string $title, string $help, array $terms, T
                         <?= Html::input('number', "RuleConfig[value][{$c->name}]", $c->value, [
                             'id' => 'rule-' . $c->name,
                             'class' => 'form-control',
-                            'min' => 0,
+                            'min' => \app\models\RuleConfig::minimumFor($c->name),
                             'step' => 1,
                         ]) ?>
                     </div>

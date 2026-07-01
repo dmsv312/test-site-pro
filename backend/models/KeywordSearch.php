@@ -19,7 +19,7 @@ class KeywordSearch extends Keyword
     public function rules(): array
     {
         return [
-            [['source', 'language', 'stage', 'raw_term', 'competition', 'competitor_domain'], 'safe'],
+            [['source', 'language', 'stage', 'raw_term', 'competition', 'competitor_domain', 'drop_reason'], 'safe'],
             [['batch_id', 'minVolume'], 'integer'],
         ];
     }
@@ -64,6 +64,7 @@ class KeywordSearch extends Keyword
         ]);
         $query->andFilterWhere(['ilike', 'raw_term', $this->raw_term]);
         $query->andFilterWhere(['ilike', 'competitor_domain', $this->competitor_domain]);
+        $query->andFilterWhere(['ilike', 'drop_reason', $this->drop_reason]);
 
         if ($this->minVolume !== null && $this->minVolume !== '') {
             $query->andWhere(['>=', 'avg_monthly_searches', (int) $this->minVolume]);

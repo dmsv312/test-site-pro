@@ -77,10 +77,15 @@ Full field list and source→field mapping: [`DATA.md`](DATA.md).
 
 ## Cleaning defaults (configurable)
 
-- **Junk:** empty / single char / digits-only / symbols-only / excessive length / stopword-only.
-- **Brand:** `site.pro`, `sitepro`, plus competitor brands (editable list).
-- **Volume:** drop `avg_monthly_searches` < 50/mo (threshold editable).
-- **Dedup / merge:** normalize the term, merge, aggregate volume, keep a canonical term.
+- **Junk:** empty / single char / digits-only / symbols-only / excessive length (editable
+  `max_term_length`, floored at 1) / stopword-only / keyboard-mash gibberish (a vowel-less token
+  of 5+ letters — deliberately narrow so real multilingual words aren't touched).
+- **Brand:** `site.pro`, `sitepro`, plus competitor brands (editable list); matched at word
+  boundaries so a brand never matches inside a longer word.
+- **Volume:** drop `avg_monthly_searches` < 50/mo (threshold editable); rows whose source gave
+  no volume are kept, not dropped (unknown ≠ low).
+- **Dedup / merge:** normalize the term, keep a canonical (highest volume, ties → lowest id).
+  Stage 4 only marks duplicates; aggregating their volume into the canonical is stage 5.
 - **Language:** a `language`/`market` column in the data, with language detection as fallback.
 - **Target URL:** a language → landing-page map (e.g. `site.pro/de`); a convention plus admin
   override when canonical URLs aren't provided.
@@ -148,11 +153,33 @@ Recorded as context → decision → consequence.
     `/xx/`, `pt` → `/pt-br/`; the map from decision 12), and the admin area can override the
     URL per language. We don't invent canonical URLs we can't confirm; the homepage is the
     honest, working default.
+16. **Cleaning flags, never deletes; the funnel is a sequential pipeline.** Auditability is the
+    point — a reviewer must see why each keyword was dropped. → Each rule sets a boolean flag and
+    a `drop_reason`; junk → dedup → brand → volume run in order and a row dropped by one rule is
+    not seen by the next, so every dropped row carries exactly one reason and the per-stage counts
+    are disjoint (the dashboard's remaining-count subtraction is exact).
+17. **Dedup across the whole dataset; link only surviving canonicals.** The same term arriving
+    from Google Ads and from Ahrefs is one keyword. → Group by normalized term over all rows;
+    the canonical survivor is the highest-volume row (ties → lowest id, deterministic). The group
+    link (`dedup_group_id`) is written only when the canonical actually survives cleaning, so no
+    live row ever references a dropped canonical. Merging the duplicates' metrics is stage 5.
+18. **A missing volume is kept, not dropped.** Some sources (Search Console; parts of Ahrefs)
+    report no search volume. → The volume rule drops a keyword only when it *has* a volume below
+    the threshold; unknown volume survives (unknown ≠ low), to be resolved when richer data lands.
+19. **Junk gibberish and brand matching are deliberately conservative.** The data spans six
+    languages. → The gibberish check only flags a vowel-less token of 5+ letters (catches
+    keyboard mash like `zxcvbnm` without touching real words, whose consonant clusters still carry
+    vowels); brand terms match on word boundaries (so "wix" hits "wix.com" but not "wixel" or the
+    Spanish "tildar"). Both err toward keeping a real keyword over a false drop.
+20. **Cleaning is idempotent and scoped to the rows it owns.** Re-running after a rule change must
+    be safe and must not disturb later stages. → `run()` first resets cleaning state, then only
+    touches rows still at `imported`/`cleaned` and not yet claimed by a stage-5 flag, so a re-run
+    can never regress a `prepared`/`ad_ready` keyword or wipe a stage-5 drop reason.
 
 ## Build stages
 
 See [`WORKLOG.md`](WORKLOG.md) for the stage table and live status. In short: spike ✅ →
-skeleton ✅ → import & model (current) → cleaning → prepare → ad generation → export → deploy.
+skeleton ✅ → import & model ✅ → cleaning ✅ → prepare (next) → ad generation → export → deploy.
 
 ## Open questions
 

@@ -27,6 +27,15 @@ class RuleConfig extends ActiveRecord
         self::MAX_TERM_LENGTH => 80,
     ];
 
+    /**
+     * Lowest sane value per threshold. `max_term_length` must be at least 1: a length of 0 would
+     * make every non-empty keyword "too long" and drop the whole dataset as junk.
+     */
+    private const MINIMUMS = [
+        self::MIN_VOLUME => 0,
+        self::MAX_TERM_LENGTH => 1,
+    ];
+
     public static function tableName(): string
     {
         return '{{%rule_config}}';
@@ -39,7 +48,23 @@ class RuleConfig extends ActiveRecord
             [['name'], 'string', 'max' => 64],
             [['value', 'label'], 'string', 'max' => 255],
             [['value'], 'integer', 'min' => 0], // all current thresholds are non-negative integers
+            [['value'], 'validateAgainstMinimum'],
         ];
+    }
+
+    /** Reject values below the per-threshold sane minimum (see {@see MINIMUMS}). */
+    public function validateAgainstMinimum(string $attribute): void
+    {
+        $min = self::minimumFor($this->name);
+        if (is_numeric($this->value) && (int) $this->value < $min) {
+            $this->addError($attribute, ($this->label ?: $this->name) . " must be at least {$min}.");
+        }
+    }
+
+    /** The lowest value this threshold may take (0 unless a stricter floor is defined). */
+    public static function minimumFor(string $name): int
+    {
+        return self::MINIMUMS[$name] ?? 0;
     }
 
     /** Integer threshold by name, falling back to the built-in default. */

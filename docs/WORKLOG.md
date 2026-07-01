@@ -4,12 +4,13 @@
 
 ## Current status
 
-- **Done:** stage 3 — CSV/JSON import behind per-source adapters, the normalized `keyword`
-  model + `import_batch` history, and a login-gated admin area (upload, import history, and a
-  filterable/sortable keyword GridView). Admin credentials moved to `.env`. All four sample
-  files import (378 keywords); web login + upload verified.
-- **Next:** stage 4 — cleaning pipeline (junk → dedup → brand → volume), each rule flagging
-  rows with a `drop_reason`, plus a funnel dashboard.
+- **Done:** stage 4 — cleaning pipeline (junk → dedup → brand → volume) where every rule flags
+  rows with a `drop_reason` instead of deleting, plus **editable rules** in the admin
+  (thresholds + brand/forbidden lists), a **funnel dashboard** that explains every drop, and a
+  `yii clean/run` console command. 378 keywords → **154 kept** (dropped 6 junk, 189 duplicate,
+  21 brand, 8 below volume); idempotent re-runs. Hardened after an adversarial code review.
+- **Next:** stage 5 — prepare for Google Ads (drop already-used/forbidden, merge duplicates,
+  group by language).
 - **Live:** https://sitepro.dm312sv.online · local http://127.0.0.1:8100 (admin login from `.env`)
 
 ## Stages
@@ -19,7 +20,7 @@
 | 1 | Data-access spike (validate real keyword metrics) | ✅ done |
 | 2 | Skeleton: Yii2 + PostgreSQL + Docker, admin login | ✅ done |
 | 3 | Import (CSV/JSON) + `keyword` model + admin GridView | ✅ done |
-| 4 | Cleaning pipeline + funnel dashboard | planned |
+| 4 | Cleaning pipeline + funnel dashboard | ✅ done |
 | 5 | Prepare for Google Ads (already-used/forbidden/merge/group by language) | planned |
 | 6 | Ad generation (per language, correct URL) + cache | planned |
 | 7 | Campaign preview + Google Ads Editor CSV export | planned |
@@ -27,6 +28,34 @@
 | 9 | Deploy hardening + smoke | planned |
 
 ## Journal
+
+### 2026-07-01 — Stage 4: cleaning pipeline + funnel + editable rules
+- **Editable rules** (in the DB, admin-managed — no deploy to tune): `rule_config` thresholds
+  (`min_volume` 50, `max_term_length` 80), `brand_term` (site.pro/sitepro + wix/squarespace/
+  weebly/godaddy/tilda) and `forbidden_term` (empty; consumed by stage 5). Admin page with a
+  thresholds form and add/remove for each list; `max_term_length` is floored at 1 so a bad value
+  can't drop the whole dataset.
+- **Cleaning pipeline** (`services/cleaning/`): single-purpose rules — `JunkRule` (empty /
+  single-char / digits-only / symbols-only / over-length / stopword-only, plus a narrow,
+  multilingual-safe gibberish check that flags a term with a vowel-less 5+ letter token like
+  `zxcvbnm`), `BrandRule` (word-boundary match so "wix" hits "wix.com" but not "wixel"/Spanish
+  "tildar"), `VolumeRule` (keeps rows whose source gave no volume). `CleaningService` runs them
+  as a sequential funnel junk → dedup → brand → volume: rules never delete, they set a flag +
+  `drop_reason`; counts stay disjoint. Dedup groups by normalized term across the whole dataset,
+  keeps the highest-volume row (ties → lowest id), and links the group only when its canonical
+  survives. Idempotent (resets state first) and scoped to rows cleaning owns, so a re-run can't
+  regress a later stage. Console parity: `yii clean/run`.
+- **Funnel dashboard** (`/cleaning`): imported → after junk → after dedup → after brand → cleaned,
+  with a drop-reason breakdown that links into the keyword grid (now filterable by `drop_reason`).
+- **Verified by hand:** 378 → 154 kept (6 junk incl. the planted keyboard-mash row, 189 duplicate,
+  21 brand, 8 below volume); a second run is identical; no row carries more than one flag; no
+  brand term leaks into the kept set. Unit tests for all three rules (38 tests pass).
+- **Adversarial code review** (4 lenses, each finding verified by refutation) → 7 confirmed, all
+  fixed and re-verified: dedup no longer leaves a duplicate pointing at a dropped canonical; the
+  reset is scoped to cleaning-owned rows (won't clobber a future stage-5 `stage`/`drop_reason`);
+  brand matching moved from substring to word-boundary (kills false positives like Spanish
+  "tildar"); the funnel uses one consistent count basis; `max_term_length` is floored at 1; and
+  the rules admin now HTML-encodes term names in flash messages.
 
 ### 2026-07-01 — Portal cleanup + login-only access
 - Removed the stock Yii scaffold (home/about/contact pages, the contact form + mailer, and Yii

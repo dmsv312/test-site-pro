@@ -19,9 +19,9 @@ $stageOptions = array_combine(Keyword::STAGES, Keyword::STAGES);
 ?>
 <h1><?= Html::encode($this->title) ?></h1>
 <p class="text-muted">
-    Every imported keyword, normalized into one table. Filter by source, language, stage, or
-    minimum volume; sort by any column. Cleaning and preparation (next stages) will flag rows
-    here with a reason rather than deleting them.
+    Every imported keyword, normalized into one table. Filter by source, language, stage,
+    minimum volume, or drop reason; sort by any column. Cleaning flags rows here with a reason
+    rather than deleting them — see the <?= Html::a('funnel', ['/cleaning/index']) ?>.
 </p>
 
 <p>
@@ -81,6 +81,12 @@ $stageOptions = array_combine(Keyword::STAGES, Keyword::STAGES);
             'attribute' => 'stage',
             'filter' => $stageOptions,
             'headerOptions' => ['style' => 'width:110px'],
+        ],
+        [
+            'attribute' => 'drop_reason',
+            'label' => 'Dropped — why',
+            'value' => fn(Keyword $k): string => (string) ($k->drop_reason ?? '—'),
+            'contentOptions' => ['class' => 'small text-muted'],
         ],
     ],
 ]) ?>
