@@ -61,6 +61,8 @@ class PrepareController extends Controller
             ));
         }
 
+        $this->stdout("\nAd generation was reset — run `yii adgen/run` to (re)generate the ads.\n");
+
         return ExitCode::OK;
     }
 }

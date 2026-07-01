@@ -65,9 +65,9 @@ cp .env.example .env                      # first run: fill in config (admin log
 docker compose up --build -d              # full stack → http://127.0.0.1:8100 (admin login from .env)
 docker compose exec app php yii migrate   # run migrations manually (also run on container start)
 docker compose exec app php yii import/samples   # import the four sample-data files
-docker compose exec app php yii clean/run        # run the cleaning pipeline (junk→dedup→brand→volume); resets stage 5
-docker compose exec app php yii prepare/run      # prepare for Google Ads (drop already-used/forbidden → group by language+theme)
-docker compose exec app php yii adgen/run        # generate one RSA per ad group (stored copy preferred, template fallback); resets on re-prepare
+docker compose exec app php yii clean/run        # run the cleaning pipeline (junk→dedup→brand→volume); resets stages 5–6 (then run prepare + adgen)
+docker compose exec app php yii prepare/run      # prepare for Google Ads (drop already-used/forbidden → group by language+theme); resets stage 6 (then run adgen)
+docker compose exec app php yii adgen/run        # generate one RSA per ad group (stored copy preferred, template fallback)
 docker compose logs -f app                # app (php-fpm) logs
 docker compose down                       # stop (keep data);  down -v to reset volumes
 ```

@@ -190,7 +190,14 @@ final class TemplateAdGenerator
         $seen = [];
         foreach ($items as $item) {
             $item = trim($item);
-            if ($item === '' || mb_strlen($item, 'UTF-8') > $maxLen) {
+            // Reject empty, invalid-UTF-8, over-length, or control-char items so the generator's
+            // output always clears RsaValidator — even a theme-derived headline whose theme carried a
+            // stray control byte from the source data (the pool is always clean; only themes can trip
+            // this). Mirrors RsaValidator::isClean.
+            if ($item === '' || !mb_check_encoding($item, 'UTF-8')) {
+                continue;
+            }
+            if (mb_strlen($item, 'UTF-8') > $maxLen || preg_match('/[\x00-\x1F\x7F]/u', $item) === 1) {
                 continue;
             }
             $key = mb_strtolower($item, 'UTF-8');

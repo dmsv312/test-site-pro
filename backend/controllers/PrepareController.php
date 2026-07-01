@@ -50,7 +50,8 @@ class PrepareController extends Controller
             'success',
             sprintf(
                 'Preparation done: %d of %d candidates prepared (dropped %d already-used, %d forbidden), '
-                . 'grouped into %d ad group(s) across %d language(s).',
+                . 'grouped into %d ad group(s) across %d language(s). '
+                . 'Ad generation was reset — re-run it to refresh the ads.',
                 $summary['prepared'],
                 $summary['candidates'],
                 $dropped['already_used'],

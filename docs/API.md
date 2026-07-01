@@ -53,15 +53,18 @@ group (never the copy). Like preparation, ad generation is fully derived and reb
 re-running preparation rebuilds the ad groups and cascades the ads away.
 
 Cleaning is the head of the pipeline: `POST /cleaning/run` recomputes from the imported data and
-**resets stage 5** (preparation), so after re-cleaning, run `/prepare/run` again.
+**resets everything downstream — stage 5 (preparation) and stage 6 (ads)**, because rebuilding the
+ad groups cascades their generated ads away. So after re-cleaning, run `/prepare/run` **then**
+`/ads/run` to rebuild both. Re-running preparation alone likewise clears the ads, so re-run
+`/ads/run` after it too.
 
 ### Console (same services, no web layer)
 
 ```
 yii import/samples [dir]          import all four sample-data files (default: /opt/sample-data)
 yii import/file <source> <path>   import one CSV/JSON file
-yii clean/run                     run the cleaning pipeline (resets stage 5)
-yii prepare/run                   run preparation: drops → merge → group by language + theme
+yii clean/run                     run the cleaning pipeline (resets stages 5–6; then run prepare + adgen)
+yii prepare/run                   run preparation: drops → merge → group by language + theme (resets stage 6)
 yii adgen/run                     generate one RSA per ad group (stored copy preferred, template fallback)
 ```
 

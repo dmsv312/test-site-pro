@@ -47,7 +47,8 @@ class CleaningController extends Controller
         Yii::$app->session->setFlash(
             'success',
             sprintf(
-                'Cleaning done: %d of %d keywords kept. Dropped %d junk, %d duplicate, %d brand, %d below volume.',
+                'Cleaning done: %d of %d keywords kept. Dropped %d junk, %d duplicate, %d brand, %d below volume. '
+                . 'Downstream stages were reset — re-run preparation, then ad generation.',
                 $summary['survivors'],
                 $summary['total'],
                 $dropped['junk'],

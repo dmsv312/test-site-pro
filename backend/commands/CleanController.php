@@ -40,7 +40,10 @@ class CleanController extends Controller
             $dropped['brand'],
             $dropped['below_volume'],
         ));
-        $this->stdout("Downstream stages were reset — run `yii prepare/run` to rebuild stage 5.\n");
+        $this->stdout(
+            "Downstream stages were reset — run `yii prepare/run` then `yii adgen/run` to rebuild "
+            . "stages 5-6.\n",
+        );
 
         return ExitCode::OK;
     }

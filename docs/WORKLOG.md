@@ -11,8 +11,9 @@
   credentials. Every ad — whichever source — must clear an **RSA validator** (≤30-char headlines,
   ≤90-char descriptions, distinct, clean UTF-8) before it's stored, and the **target URL is
   authoritative from the ad group, never the copy** (untrusted text can't redirect a campaign).
-  Admin **preview** + `yii adgen/run`; 22 new unit tests. 19 ad groups → **19 ads** (6 from stored
-  EN copy, 13 template), **0 invalid**, covering all **107** prepared keywords; idempotent.
+  Admin **preview** + `yii adgen/run`; 23 unit tests (adversarial review passed). 19 ad groups →
+  **19 ads** (6 from stored EN copy, 13 template), **0 invalid**, covering all **107** prepared
+  keywords; idempotent.
   Generation is the **tail** of the pipeline: re-running preparation rebuilds the ad groups and
   cascades the ads away, so re-prep invalidates stage 6 by design (mirroring stage 4→5). Simplified
   `GroupingService` to a plain full rebuild accordingly (decision 27 supersedes 26).
@@ -61,7 +62,17 @@
   preparation keeps 107/19 **and** cascades the ads to 0; re-generating restores 19 (three cycles
   stable). The `/ads` page renders authenticated (200, no errors) with per-headline/description
   character counts and the stored/template split. **22 new unit tests** (RsaValidator,
-  TemplateAdGenerator, StoredAdSource) — full unit suite **72 pass**.
+  TemplateAdGenerator, StoredAdSource) — full unit suite **72 pass** at build time.
+- **Adversarial code review** (5 lenses — cross-stage/idempotency, RSA/untrusted-input/XSS, template
+  generator, UI numbers, docs; each finding verified by refutation, most reproduced empirically in
+  the container). Three lenses came back clean; two confirmed and fixed: (1) `TemplateAdGenerator`'s
+  cap step didn't strip control characters, so a theme carrying a stray control byte (from an unclean
+  source keyword) could produce a headline that failed the RSA validator — it now rejects unclean
+  items, restoring the "output always clears RsaValidator" invariant (regression test added → **23
+  stage-6 tests, full suite 73 pass**); the ad already failed safely (stored `is_valid=false`, no
+  crash/XSS). (2) The `clean/run` guidance said it only "resets stage 5" and prescribed re-running
+  only preparation, but the stage-6 CASCADE also clears the ads — corrected the cleaning/preparation
+  console + web messages and the API/CLAUDE docs to chain re-clean → re-prepare → re-generate.
 
 ### 2026-07-01 — Stage 5.1: pipeline-view grid + funnel consistency (UX pass)
 - **Reviewed the admin UI end-to-end** after stage 5 and closed the inconsistencies it exposed:

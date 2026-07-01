@@ -75,4 +75,15 @@ final class TemplateAdGeneratorTest extends \Codeception\Test\Unit
         verify(count($ad->headlines) <= RsaValidator::MAX_HEADLINES)->true();
         verify(count($ad->descriptions) <= RsaValidator::MAX_DESCRIPTIONS)->true();
     }
+
+    public function testControlCharThemeStillProducesValidAd(): void
+    {
+        // A theme carrying a stray control byte (e.g. an unclean source keyword) must not yield a
+        // headline that fails RsaValidator — the theme-derived headlines are dropped and the ad
+        // falls back to the (always-clean) language pool.
+        $ad = $this->generator->generate('en', "Web\x07builder", "web\x07builder");
+
+        verify($this->validator->validate($ad))->equals([]);
+        verify(count($ad->headlines) >= RsaValidator::MIN_HEADLINES)->true();
+    }
 }
