@@ -203,13 +203,27 @@ Recorded as context → decision → consequence.
     deterministic **heuristic**, documented as such — a smarter clusterer (embeddings, an editable
     taxonomy) is a later refinement. The `ad_group` table is fully derived and rebuilt each run.
 
-24. **The keyword grid's Kept/Dropped is pipeline-wide, not tied to one stage.** Once stage 5
-    advances rows to `prepared` and flags others, "kept = stage is cleaned" would show stage-5
-    drops as kept. → Kept = `drop_reason IS NULL AND stage <> imported` (still surviving,
-    whichever stage), Dropped = has a `drop_reason` (any stage). The two are mutually exclusive and
-    stay correct as later stages advance rows.
+24. **The keyword grid is organized by pipeline view, not a Kept/Dropped binary.** With more than
+    one drop stage, a two-way toggle is ambiguous (a row kept by cleaning can be dropped by
+    preparation). → The grid's prominent control is four stage-aware views — **All** (everything),
+    **Cleaned** (survived cleaning, `stage <> imported` — the ad-candidate set), **Prepared**
+    (`stage = prepared` — net-new, campaign-ready), **Dropped** (`drop_reason IS NOT NULL`, any
+    stage) — each a lens the column filters narrow further. The tab badges carry the per-view counts,
+    so the grid reconciles with the Cleaning funnel (Cleaned = 154) and the Prepare funnel
+    (Prepared = 107); the default view is Cleaned once cleaning has run, else All (so a fresh import
+    is never a blank page). Stage is picked via these tabs, so the per-column stage filter (and its
+    unreachable `ad_ready` option) was removed. Each ad group on `/prepare` links to its keywords
+    (`view=prepared&ad_group_id=N`). Supersedes the earlier Kept/Dropped/All toggle.
 
-25. **Grouping preserves a later stage's `ad_ready` groups; ad groups advance as a whole.** A
+25. **Each stage's funnel counts only that stage's own drops.** The Cleaning funnel's drop-reason
+    breakdown queried every `drop_reason`, so once preparation started writing reasons
+    ("already used in Google Ads") on rows that *survived* cleaning, they leaked into the cleaning
+    breakdown and it no longer summed to the "Dropped" total on the same page. → The cleaning
+    breakdown is scoped to rows carrying a cleaning flag (`is_junk`/`is_duplicate`/`is_brand`/
+    `below_volume`), so it counts only cleaning's 224 drops; preparation's drops live on the Prepare
+    funnel. Each funnel is internally consistent.
+
+26. **Grouping preserves a later stage's `ad_ready` groups; ad groups advance as a whole.** A
     preparation re-run rebuilds the *prepared* campaigns and must not wipe campaigns whose ads a
     later stage already generated. → The rebuild unlinks only `prepared` rows and deletes only
     ad groups not referenced by an `ad_ready` row, on the assumption that stage 6 advances an ad

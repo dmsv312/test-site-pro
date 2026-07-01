@@ -105,7 +105,7 @@ $alreadyUsedReason = 'already used in Google Ads';
                             <td>
                                 <?= Html::a(
                                     'Already used in Google Ads',
-                                    ['/import/keywords', 'KeywordSearch' => ['drop_reason' => $alreadyUsedReason, 'status' => 'all']],
+                                    ['/import/keywords', 'KeywordSearch' => ['drop_reason' => $alreadyUsedReason, 'view' => 'dropped']],
                                     ['class' => 'text-decoration-none'],
                                 ) ?>
                             </td>
@@ -170,7 +170,13 @@ $alreadyUsedReason = 'already used in Google Ads';
                                 $more = (int) $group->keyword_count - count($sample);
                                 ?>
                                 <tr>
-                                    <td class="fw-medium"><?= Html::encode($group->theme) ?></td>
+                                    <td class="fw-medium">
+                                        <?= Html::a(
+                                            Html::encode($group->theme),
+                                            ['/import/keywords', 'KeywordSearch' => ['view' => 'prepared', 'ad_group_id' => $group->id]],
+                                            ['class' => 'text-decoration-none', 'title' => 'View this ad group’s keywords'],
+                                        ) ?>
+                                    </td>
                                     <td class="text-end"><span class="badge text-bg-secondary"><?= (int) $group->keyword_count ?></span></td>
                                     <td class="small text-muted">
                                         <?= Html::encode(implode(', ', $sample)) ?><?= $more > 0 ? ' …+' . $more : '' ?>
@@ -187,7 +193,7 @@ $alreadyUsedReason = 'already used in Google Ads';
 <?php endif; ?>
 
 <p class="mt-4">
-    <?= Html::a('View prepared keywords →', ['/import/keywords', 'KeywordSearch' => ['stage' => 'prepared', 'status' => 'all']], [
+    <?= Html::a('View prepared keywords →', ['/import/keywords', 'KeywordSearch' => ['view' => 'prepared']], [
         'class' => 'btn btn-outline-success btn-sm',
     ]) ?>
 </p>

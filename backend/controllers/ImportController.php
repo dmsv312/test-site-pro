@@ -99,7 +99,7 @@ class ImportController extends Controller
                 . " (skipped {$batch->rows_skipped}).",
             );
 
-            return $this->redirect(['keywords', 'KeywordSearch' => ['batch_id' => $batch->id, 'status' => 'all']]);
+            return $this->redirect(['keywords', 'KeywordSearch' => ['batch_id' => $batch->id, 'view' => 'all']]);
         }
 
         Yii::$app->session->setFlash('error', "Import failed: {$batch->message}");
@@ -124,6 +124,7 @@ class ImportController extends Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'languages' => array_combine($languages, $languages),
+            'viewCounts' => KeywordSearch::counts(),
         ]);
     }
 

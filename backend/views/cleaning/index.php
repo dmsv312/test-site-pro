@@ -94,7 +94,7 @@ $reasons = $summary['reasons'];
                                 <td>
                                     <?= Html::a(
                                         Html::encode($r['drop_reason']),
-                                        ['/import/keywords', 'KeywordSearch' => ['drop_reason' => $r['drop_reason'], 'status' => 'all']],
+                                        ['/import/keywords', 'KeywordSearch' => ['drop_reason' => $r['drop_reason'], 'view' => 'dropped']],
                                         ['class' => 'text-decoration-none'],
                                     ) ?>
                                 </td>
@@ -110,10 +110,10 @@ $reasons = $summary['reasons'];
 </div>
 
 <p class="mt-4">
-    <?= Html::a('View all keywords →', ['/import/keywords', 'KeywordSearch' => ['status' => 'all']], [
+    <?= Html::a('View all keywords →', ['/import/keywords', 'KeywordSearch' => ['view' => 'all']], [
         'class' => 'btn btn-outline-secondary btn-sm',
     ]) ?>
-    <?= Html::a('Kept only →', ['/import/keywords', 'KeywordSearch' => ['status' => 'kept']], [
+    <?= Html::a('View cleaned keywords →', ['/import/keywords', 'KeywordSearch' => ['view' => 'cleaned']], [
         'class' => 'btn btn-outline-success btn-sm',
     ]) ?>
 </p>

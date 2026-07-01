@@ -11,41 +11,57 @@ use yii\helpers\Html;
 /** @var app\models\KeywordSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 /** @var array<string, string> $languages */
+/** @var array<string, int> $viewCounts per-view row counts for the tab badges */
 
 $this->title = 'Keywords';
 $this->params['breadcrumbs'][] = ['label' => 'Import & data', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
-$stageOptions = array_combine(Keyword::STAGES, Keyword::STAGES);
-
-// Kept / Dropped / All toggle. Preserve the current filters (source, language, …) and reset paging.
-$statusTabs = [
-    KeywordSearch::STATUS_KEPT => 'Kept',
-    KeywordSearch::STATUS_DROPPED => 'Dropped',
-    KeywordSearch::STATUS_ALL => 'All',
+// Pipeline views (the prominent control): each is a stage-aware lens on the one table. The tab
+// badges double as the pipeline counts, so they reconcile with the Cleaning and Prepare funnels.
+$viewTabs = [
+    KeywordSearch::VIEW_ALL => ['All', 'Every imported keyword.'],
+    KeywordSearch::VIEW_CLEANED => ['Cleaned', 'Survived cleaning — the ad-candidate set.'],
+    KeywordSearch::VIEW_PREPARED => ['Prepared', 'Net-new, grouped into campaigns — ready for ads.'],
+    KeywordSearch::VIEW_DROPPED => ['Dropped', 'Flagged at some stage; the reason is in the last column.'],
 ];
-$currentStatus = $searchModel->effectiveStatus();
+$currentView = $searchModel->effectiveView();
+[$currentLabel, $currentBlurb] = $viewTabs[$currentView];
+// Preserve the column filters when switching view, but drop paging so you land on page 1.
 $currentFilters = Yii::$app->request->queryParams['KeywordSearch'] ?? [];
+unset($currentFilters['view']);
+$adGroupId = $searchModel->ad_group_id;
+$total = (int) ($dataProvider->totalCount);
 ?>
 <h1><?= Html::encode($this->title) ?></h1>
 <p class="text-muted">
-    Every imported keyword, normalized into one table. Filter by source, language, stage,
-    minimum volume, or drop reason; sort by any column. Cleaning flags rows here with a reason
-    rather than deleting them — see the <?= Html::a('funnel', ['/cleaning/index']) ?>.
+    Every imported keyword, normalized into one table. The tabs below are pipeline views; the column
+    filters (source, language, volume, competition, drop reason) narrow whichever view is active.
+    Cleaning flags rows with a reason rather than deleting them — see the
+    <?= Html::a('cleaning funnel', ['/cleaning/index']) ?> and
+    <?= Html::a('preparation', ['/prepare/index']) ?>.
 </p>
 
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <div class="btn-group btn-group-sm" role="group" aria-label="Keyword status">
-        <?php foreach ($statusTabs as $key => $label): ?>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+    <div class="btn-group btn-group-sm" role="group" aria-label="Pipeline view">
+        <?php foreach ($viewTabs as $key => [$label, $blurb]): ?>
             <?= Html::a(
-                $label,
-                ['keywords', 'KeywordSearch' => array_merge($currentFilters, ['status' => $key])],
-                ['class' => 'btn ' . ($currentStatus === $key ? 'btn-primary' : 'btn-outline-primary')],
+                $label . ' <span class="badge rounded-pill ' . ($currentView === $key ? 'text-bg-light' : 'text-bg-secondary') . '">' . (int) ($viewCounts[$key] ?? 0) . '</span>',
+                ['keywords', 'KeywordSearch' => array_merge($currentFilters, ['view' => $key])],
+                ['class' => 'btn ' . ($currentView === $key ? 'btn-primary' : 'btn-outline-primary'), 'title' => $blurb],
             ) ?>
         <?php endforeach; ?>
     </div>
     <?= Html::a('← Back to import', ['index'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
 </div>
+<p class="text-muted small mb-3">
+    <strong><?= Html::encode($currentLabel) ?></strong> — <?= Html::encode($currentBlurb) ?>
+    Showing <?= Yii::$app->formatter->asInteger($total) ?> keyword(s).
+    <?php if ($adGroupId !== null): ?>
+        <span class="badge text-bg-info">ad group #<?= (int) $adGroupId ?></span>
+        <?= Html::a('clear', ['keywords', 'KeywordSearch' => array_merge(array_diff_key($currentFilters, ['ad_group_id' => null]), ['view' => $currentView])], ['class' => 'ms-1']) ?>
+    <?php endif; ?>
+</p>
 
 <?= GridView::widget([
     'dataProvider' => $dataProvider,
@@ -102,7 +118,7 @@ $currentFilters = Yii::$app->request->queryParams['KeywordSearch'] ?? [];
         ],
         [
             'attribute' => 'stage',
-            'filter' => $stageOptions,
+            'filter' => false, // stage is chosen via the pipeline-view tabs above, not per-column
             'headerOptions' => ['style' => 'width:110px'],
         ],
         [

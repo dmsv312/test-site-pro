@@ -10,42 +10,75 @@ use yii\db\Expression;
 
 /**
  * Search/filter model behind the admin keywords grid.
+ *
+ * The prominent control is a **pipeline view** ({@see effectiveView()}): All · Cleaned · Prepared ·
+ * Dropped. Each view is a stage-aware base scope that the column filters (source, language, volume,
+ * competition, drop reason, ad group) narrow further. The views are lenses on one table, not a
+ * partition — a keyword that survived cleaning but was dropped in preparation shows under both
+ * Cleaned and Dropped — so each view answers one clear question and the counts match the pipeline
+ * pages ({@see counts()} feeds the tab badges, which reconcile with the Cleaning/Prepare funnels).
  */
 class KeywordSearch extends Keyword
 {
     /** Virtual filter: minimum average monthly searches. */
     public int|string|null $minVolume = null;
 
-    /** Virtual filter: kept | dropped | all (see {@see effectiveStatus()}). Defaults to kept. */
-    public ?string $status = null;
+    /** Virtual filter: which pipeline view to show (see {@see effectiveView()}). */
+    public ?string $view = null;
 
-    public const STATUS_KEPT = 'kept';
-    public const STATUS_DROPPED = 'dropped';
-    public const STATUS_ALL = 'all';
+    public const VIEW_ALL = 'all';
+    public const VIEW_CLEANED = 'cleaned';       // survived cleaning — the ad-candidate set
+    public const VIEW_PREPARED = 'prepared';     // net-new, campaign-ready
+    public const VIEW_DROPPED = 'dropped';       // flagged by any stage, with a reason
+
+    public const VIEWS = [self::VIEW_ALL, self::VIEW_CLEANED, self::VIEW_PREPARED, self::VIEW_DROPPED];
+
+    private ?string $resolvedView = null;
 
     public function rules(): array
     {
         return [
-            [['source', 'language', 'stage', 'raw_term', 'competition', 'competitor_domain', 'drop_reason', 'status'], 'safe'],
-            [['batch_id', 'minVolume'], 'integer'],
+            [['source', 'language', 'stage', 'raw_term', 'competition', 'competitor_domain', 'drop_reason', 'view'], 'safe'],
+            [['batch_id', 'minVolume', 'ad_group_id'], 'integer'],
         ];
     }
 
     /**
-     * The chosen status, defaulting to "kept" so the grid shows the clean, ad-candidate set
-     * unless the viewer explicitly asks for dropped/all. Unknown values fall back to kept.
+     * The active view, defaulting to the ad-candidate set once cleaning has run (so dropped junk
+     * doesn't clutter the default) and to everything before that (so a fresh import is never a blank
+     * page). An explicit, valid `view` param always wins. Resolved once per request.
      */
-    public function effectiveStatus(): string
+    public function effectiveView(): string
     {
-        return in_array($this->status, [self::STATUS_DROPPED, self::STATUS_ALL], true)
-            ? $this->status
-            : self::STATUS_KEPT;
+        if ($this->resolvedView !== null) {
+            return $this->resolvedView;
+        }
+        if (in_array($this->view, self::VIEWS, true)) {
+            return $this->resolvedView = $this->view;
+        }
+
+        $cleaningHasRun = Keyword::find()->where(['<>', 'stage', Keyword::STAGE_IMPORTED])->exists();
+
+        return $this->resolvedView = $cleaningHasRun ? self::VIEW_CLEANED : self::VIEW_ALL;
     }
 
     /** Bypass the parent's required-field scenario; all filter fields are safe. */
     public function scenarios(): array
     {
         return Model::scenarios();
+    }
+
+    /** Row counts per view, for the tab badges (and cross-page reconciliation). */
+    public static function counts(): array
+    {
+        $count = static fn(array $condition): int => (int) Keyword::find()->where($condition)->count();
+
+        return [
+            self::VIEW_ALL => (int) Keyword::find()->count(),
+            self::VIEW_CLEANED => $count(['<>', 'stage', Keyword::STAGE_IMPORTED]),
+            self::VIEW_PREPARED => $count(['stage' => Keyword::STAGE_PREPARED]),
+            self::VIEW_DROPPED => $count(['not', ['drop_reason' => null]]),
+        ];
     }
 
     public function search(array $params): ActiveDataProvider
@@ -79,6 +112,7 @@ class KeywordSearch extends Keyword
             'stage' => $this->stage ?: null,
             'competition' => $this->competition ?: null,
             'batch_id' => $this->batch_id ?: null,
+            'ad_group_id' => $this->ad_group_id ?: null,
         ]);
         $query->andFilterWhere(['ilike', 'raw_term', $this->raw_term]);
         $query->andFilterWhere(['ilike', 'competitor_domain', $this->competitor_domain]);
@@ -88,14 +122,20 @@ class KeywordSearch extends Keyword
             $query->andWhere(['>=', 'avg_monthly_searches', (int) $this->minVolume]);
         }
 
-        // Pipeline-wide, mutually exclusive: Kept = still surviving (no drop reason, past import —
-        // whether cleaned or prepared); Dropped = flagged by any stage (has a reason); All = both.
-        // Defined on drop_reason, not a single stage, so it stays correct as stage 5 advances rows.
-        $status = $this->effectiveStatus();
-        if ($status === self::STATUS_KEPT) {
-            $query->andWhere(['drop_reason' => null])->andWhere(['<>', 'stage', Keyword::STAGE_IMPORTED]);
-        } elseif ($status === self::STATUS_DROPPED) {
-            $query->andWhere(['not', ['drop_reason' => null]]);
+        // Pipeline view (the prominent tabs), applied as a base scope on top of the column filters.
+        // Cleaned = survived cleaning (past import); Prepared = the net-new set; Dropped = has a
+        // reason from any stage; All = no scope.
+        switch ($this->effectiveView()) {
+            case self::VIEW_CLEANED:
+                $query->andWhere(['<>', 'stage', Keyword::STAGE_IMPORTED]);
+                break;
+            case self::VIEW_PREPARED:
+                $query->andWhere(['stage' => Keyword::STAGE_PREPARED]);
+                break;
+            case self::VIEW_DROPPED:
+                $query->andWhere(['not', ['drop_reason' => null]]);
+                break;
+            // VIEW_ALL: no base scope.
         }
 
         return $dataProvider;

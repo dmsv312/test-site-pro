@@ -33,6 +33,27 @@
 
 ## Journal
 
+### 2026-07-01 — Stage 5.1: pipeline-view grid + funnel consistency (UX pass)
+- **Reviewed the admin UI end-to-end** after stage 5 and closed the inconsistencies it exposed:
+- **Keyword grid is now organized by pipeline view.** Replaced the stage-4 Kept/Dropped/All toggle
+  with four stage-aware tabs — **All · Cleaned · Prepared · Dropped** — each carrying its count in a
+  badge, plus a context line stating which view is active and how many rows it holds. Landing on
+  "prepared" now reads as a first-class view instead of an "All" grid with a buried column filter.
+  The per-column stage filter (and its unreachable `ad_ready` option) was removed — stage is chosen
+  via the tabs. Default view is Cleaned once cleaning has run, else All.
+- **Cross-page numbers reconcile.** The tab counts are the pipeline counts (All 378 · Cleaned 154 ·
+  Prepared 107 · Dropped 271), so the grid agrees with the Cleaning funnel (154 kept) and the
+  Prepare funnel (107 prepared). The cleaning page's "View cleaned keywords" link now lands on
+  Cleaned (154), matching its own "Kept 154".
+- **Cleaning funnel no longer leaks stage-5 drops.** Its drop-reason breakdown was counting every
+  `drop_reason`, so preparation's "already used in Google Ads" (47) showed up under cleaning and the
+  list disagreed with the funnel's "Dropped 224". Scoped it to rows carrying a cleaning flag, so it
+  counts only cleaning's 224 drops.
+- **Ad groups link to their keywords.** Each ad group on `/prepare` links to the grid filtered to
+  that group (`view=prepared&ad_group_id=N`), with a badge + "clear" on the grid.
+- Verified live (assertions + screenshots): tab counts, each view's row count, the ad-group drill-in
+  (6 rows), and the cleaning breakdown (0 stage-5 reasons). See PLAN decisions 24–25.
+
 ### 2026-07-01 — Stage 5: preparation (drops → merge) + campaign grouping + drift fix
 - **Preparation pipeline** (`services/preparation/`): single-purpose rules like cleaning —
   `AlreadyUsedRule` (a term is already-used when its normalized form appears in the `google_ads`

@@ -247,9 +247,16 @@ final class CleaningService
         $afterBrand = $afterDedup - $brand;
         $afterVolume = $afterBrand - $belowVolume; // survivors — the ad-candidate keywords
 
+        // Only cleaning's own drops — a row flagged by one of the four cleaning rules. Stage 5
+        // writes its own drop reasons (already-used / forbidden) on rows that *survived* cleaning,
+        // so filtering by the cleaning flags keeps them out of this funnel's breakdown (which would
+        // otherwise disagree with the "Dropped" total above).
         $reasons = Keyword::find()
             ->select(['drop_reason', 'cnt' => new Expression('COUNT(*)')])
             ->where(['not', ['drop_reason' => null]])
+            ->andWhere(['or',
+                ['is_junk' => true], ['is_duplicate' => true], ['is_brand' => true], ['below_volume' => true],
+            ])
             ->groupBy('drop_reason')
             ->orderBy(['cnt' => SORT_DESC, 'drop_reason' => SORT_ASC])
             ->asArray()
