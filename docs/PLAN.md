@@ -60,7 +60,7 @@ Components:
 | `keyword` | the central record — raw + normalized term, source, language, geo, volume, CPC, competition, competitor domain, source URL, stage flags, `drop_reason`, `dedup_group_id` |
 | `brand_term`, `forbidden_term` | editable lists used by the brand / forbidden rules |
 | `rule_config` | thresholds (e.g. min volume) editable in the admin area |
-| `ad_group` | language, theme, final URL |
+| `ad_group` | one language+theme bucket: language, theme (+ `theme_key`), campaign name, final URL, keyword count — fully derived from `keyword`, rebuilt each preparation run |
 | `generated_ad` | headlines/descriptions (JSON), paths, final URL, generated_by (claude/template) |
 | `export_file` | produced export artifacts |
 
@@ -171,16 +171,59 @@ Recorded as context → decision → consequence.
     keyboard mash like `zxcvbnm` without touching real words, whose consonant clusters still carry
     vowels); brand terms match on word boundaries (so "wix" hits "wix.com" but not "wixel" or the
     Spanish "tildar"). Both err toward keeping a real keyword over a false drop.
-20. **Cleaning is idempotent and scoped to the rows it owns.** Re-running after a rule change must
-    be safe and must not disturb later stages. → `run()` first resets cleaning state, then only
-    touches rows still at `imported`/`cleaned` and not yet claimed by a stage-5 flag, so a re-run
-    can never regress a `prepared`/`ad_ready` keyword or wipe a stage-5 drop reason.
+20. **Cleaning is the head of the pipeline: a run is a pure function of the imported data and
+    resets the whole downstream.** The earlier "scope cleaning to its own rows so a re-run never
+    disturbs stage 5" design was wrong — dedup is *global*, so hiding the rows stage 5 had locked
+    made cleaning's dedup pick different canonicals and resurrect duplicates, drifting the kept set
+    (154 → 237 → …) and re-introducing duplicate keywords into the prepared set on every
+    clean→prepare cycle. → `run()` now resets **every** keyword to `imported`, clears all cleaning
+    *and* preparation flags, empties the derived `ad_group` table, then recomputes. Re-running
+    cleaning deterministically yields the same result regardless of history and **invalidates
+    stage 5 by design** (a changed cleaning rule must reconsider every row); the console/UI tell the
+    operator to re-run preparation. Supersedes the scoped-reset design.
+
+21. **"Already used" = the `google_ads` source.** The assignment says to drop keywords already used
+    in Ads; that source *is* the account's live keyword list, so we need no extra list. → An exact
+    normalized-term match against the google_ads terms flags a keyword as already-used, leaving a
+    **net-new** prepared set (a google_ads keyword that survived cleaning flags itself — intended).
+    A separate editable "already-used" list was considered and rejected as redundant.
+
+22. **Merge keeps one true volume (the max), never a sum.** The same term from Google Ads and from
+    Ahrefs is one search query with one real monthly volume. → Stage-4 dedup already collapses each
+    duplicate group to its highest-volume canonical, so the prepared survivor carries the group's
+    true (max) volume; stage 5 reports the consolidation and does not add volumes (which would
+    triple-count a single query).
+
+23. **Grouping: one campaign per language, themed ad groups via a frequency token clusterer.** The
+    task says "group by language"; real campaigns also need ad groups. → `GroupingService` builds a
+    campaign per language (target URL from the verified `languageUrlMap`, decision 15) and
+    `ThemeClusterer` assigns each keyword to the ad group named after the highest-frequency
+    meaningful token it contains (multilingual stopwords + bare numbers ignored; ties →
+    alphabetical; single-keyword themes fold into `General`). It is a deliberately simple,
+    deterministic **heuristic**, documented as such — a smarter clusterer (embeddings, an editable
+    taxonomy) is a later refinement. The `ad_group` table is fully derived and rebuilt each run.
+
+24. **The keyword grid's Kept/Dropped is pipeline-wide, not tied to one stage.** Once stage 5
+    advances rows to `prepared` and flags others, "kept = stage is cleaned" would show stage-5
+    drops as kept. → Kept = `drop_reason IS NULL AND stage <> imported` (still surviving,
+    whichever stage), Dropped = has a `drop_reason` (any stage). The two are mutually exclusive and
+    stay correct as later stages advance rows.
+
+25. **Grouping preserves a later stage's `ad_ready` groups; ad groups advance as a whole.** A
+    preparation re-run rebuilds the *prepared* campaigns and must not wipe campaigns whose ads a
+    later stage already generated. → The rebuild unlinks only `prepared` rows and deletes only
+    ad groups not referenced by an `ad_ready` row, on the assumption that stage 6 advances an ad
+    group to `ad_ready` as a whole (its keywords move together). No `ad_ready` rows exist yet, so
+    today this is an exact full rebuild; stage 6 will confirm the whole-group advancement model.
 
 ## Build stages
 
 See [`WORKLOG.md`](WORKLOG.md) for the stage table and live status. In short: spike ✅ →
-skeleton ✅ → import & model ✅ → cleaning ✅ → prepare (next) → ad generation → export → deploy.
+skeleton ✅ → import & model ✅ → cleaning ✅ → prepare ✅ → ad generation (next) → export → deploy.
 
 ## Open questions
 
-- Which languages / markets to showcase in the preview.
+- Stage 6 target-URL granularity: keep the per-language homepage default, or add per-ad-group
+  (per-theme) landing overrides in the admin.
+- Whether stage 6 advances an ad group to `ad_ready` as a whole (assumed in decision 25) or lets a
+  group be partially generated.

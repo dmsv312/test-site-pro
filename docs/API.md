@@ -32,11 +32,26 @@ GET  /import/keywords   the full keyword table (filter by source/language/stage/
 POST /import/clear      wipe all imported data (for re-importing during a demo)
 ```
 
-### Console (same service, no web layer)
+### Admin routes — pipeline (login-gated)
+
+```
+GET  /cleaning/index    cleaning funnel (junk → dedup → brand → volume) + drop reasons
+POST /cleaning/run      run cleaning; resets the downstream (see below)
+GET  /prepare/index     preparation funnel + campaign preview (languages → ad groups)
+POST /prepare/run       drop already-used/forbidden → keep canonicals → group by language + theme
+GET  /rules/index       editable thresholds + brand / forbidden term lists
+```
+
+Cleaning is the head of the pipeline: `POST /cleaning/run` recomputes from the imported data and
+**resets stage 5** (preparation), so after re-cleaning, run `/prepare/run` again.
+
+### Console (same services, no web layer)
 
 ```
 yii import/samples [dir]          import all four sample-data files (default: /opt/sample-data)
 yii import/file <source> <path>   import one CSV/JSON file
+yii clean/run                     run the cleaning pipeline (resets stage 5)
+yii prepare/run                   run preparation: drops → merge → group by language + theme
 ```
 
 ### External API (future)

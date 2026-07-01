@@ -4,13 +4,17 @@
 
 ## Current status
 
-- **Done:** stage 4 — cleaning pipeline (junk → dedup → brand → volume) where every rule flags
-  rows with a `drop_reason` instead of deleting, plus **editable rules** in the admin
-  (thresholds + brand/forbidden lists), a **funnel dashboard** that explains every drop, and a
-  `yii clean/run` console command. 378 keywords → **154 kept** (dropped 6 junk, 189 duplicate,
-  21 brand, 8 below volume); idempotent re-runs. Hardened after an adversarial code review.
-- **Next:** stage 5 — prepare for Google Ads (drop already-used/forbidden, merge duplicates,
-  group by language).
+- **Done:** stage 5 — preparation for Google Ads. Over the cleaned keywords it drops terms
+  Site.pro **already runs** (the `google_ads` source ⇒ only net-new remain) and any **forbidden**
+  term, keeps one canonical per duplicate group (highest volume — volume is not summed), then
+  **groups** the survivors into one campaign per language with **themed ad groups** (a
+  frequency-based token clusterer). Admin **funnel + campaign preview**, a `yii prepare/run`
+  console command, and unit tests for the new rules. 154 cleaned → 47 already-used dropped →
+  **107 prepared** → **19 ad groups across 6 languages**; idempotent. While building this we found
+  and fixed a stage-4↔5 dedup drift bug: cleaning is now a pure function of the imported data
+  (a run resets the whole downstream), so repeated clean→prepare cycles are stable. Reviewed
+  adversarially (one latent `ad_ready` link-preservation finding fixed).
+- **Next:** stage 6 — ad generation per ad group (in its language, correct target URL) + cache.
 - **Live:** https://sitepro.dm312sv.online · local http://127.0.0.1:8100 (admin login from `.env`)
 
 ## Stages
@@ -21,13 +25,56 @@
 | 2 | Skeleton: Yii2 + PostgreSQL + Docker, admin login | ✅ done |
 | 3 | Import (CSV/JSON) + `keyword` model + admin GridView | ✅ done |
 | 4 | Cleaning pipeline + funnel dashboard | ✅ done |
-| 5 | Prepare for Google Ads (already-used/forbidden/merge/group by language) | planned |
+| 5 | Prepare for Google Ads (already-used/forbidden/merge/group by language+theme) | ✅ done |
 | 6 | Ad generation (per language, correct URL) + cache | planned |
 | 7 | Campaign preview + Google Ads Editor CSV export | planned |
 | 8 | Real data collection → input files + labeled samples | ✅ done (early) |
 | 9 | Deploy hardening + smoke | planned |
 
 ## Journal
+
+### 2026-07-01 — Stage 5: preparation (drops → merge) + campaign grouping + drift fix
+- **Preparation pipeline** (`services/preparation/`): single-purpose rules like cleaning —
+  `AlreadyUsedRule` (a term is already-used when its normalized form appears in the `google_ads`
+  source, i.e. the account's live keyword list; exact match, so preparation yields a **net-new**
+  set) and `ForbiddenRule` (word-boundary match, mirroring `BrandRule`; the list is admin-editable
+  and ships empty). `PreparationService` runs already-used → forbidden as a flag-not-delete funnel
+  over the cleaned rows, advances survivors to `prepared`, and reports the merge: dedup already
+  collapsed each duplicate group to its highest-volume canonical, so the survivor carries the
+  group's true (max) volume — volume is **not** summed. Idempotent; console parity `yii prepare/run`.
+- **Campaign grouping** (`GroupingService` + `ThemeClusterer`, migration `ad_group` +
+  `keyword.ad_group_id`): one campaign per language (target URL from the verified `languageUrlMap`),
+  and inside it, themed ad groups. The clusterer is deliberately simple and deterministic — it
+  counts meaningful tokens across a language's keywords (multilingual stopwords + bare numbers
+  ignored) and names each ad group after the highest-frequency token a keyword contains
+  (ties → alphabetical); single-keyword themes fold into a `General` bucket. The `ad_group` table
+  is fully derived and rebuilt each run.
+- **Admin UI** (`/prepare`, login-gated): the preparation funnel (cleaned → after already-used →
+  prepared, with the merged-groups count and a drop breakdown) plus a **campaign preview** —
+  per-language cards showing the target URL and each ad group's theme, size, and sample terms.
+  Nav entry added between Cleaning and Rules.
+- **Verified by hand:** 154 cleaned → 47 already-used dropped → **107 prepared**, grouped into
+  **19 ad groups over 6 languages** (en 55, fr 13, pt 12, it 11, de 10, es 6); SQL invariants —
+  0 prepared terms present in the google_ads set (net-new holds), every prepared row has an ad
+  group, no group's stored count disagrees with its links, `(language, theme_key)` unique. Themes
+  are language-appropriate (DE *Erstellen*, FR *Créer/Site*, PT *Criar/Gratuito*, IT *Gratis*).
+  Console + web run agree; screenshots taken.
+- **Drift bug found & fixed (stage 4 ↔ 5).** Re-running cleaning after preparation drifted
+  (154 → 237 → … kept, duplicate keywords reappearing in the prepared set): cleaning's reset/scope
+  excluded the rows preparation had locked, but dedup is global — hiding a canonical resurrected
+  its duplicates. Fix: **cleaning is the head of the pipeline and a pure function of the imported
+  data** — a run resets the whole downstream (all rows → `imported`, all cleaning + preparation
+  flags cleared, `ad_group` emptied) then recomputes, so repeated clean→prepare cycles are stable
+  (verified: 3 cycles identical, 0 duplicate terms in the prepared set). Re-cleaning now invalidates
+  stage 5 by design; the console/UI say to re-run preparation. Also redefined the keyword grid's
+  **Kept/Dropped** status to be pipeline-wide (`drop_reason IS NULL AND stage <> imported`) so it
+  stays correct as stage 5 advances rows.
+- **Adversarial code review** (independent pass, findings verified by refutation) → one latent
+  finding fixed: `GroupingService`'s rebuild unlinked *every* keyword, which would clobber an
+  `ad_ready` keyword's ad group once stage 6 exists; scoped the unlink to `prepared` and the group
+  deletion to non-`ad_ready` groups, so a re-run can't wipe a stage-6 campaign (verified by
+  advancing a whole ad group to `ad_ready` and re-running: its links survive, nothing throws). No
+  live correctness bugs; other candidates (FK ordering, clusterer edge cases, count math) refuted.
 
 ### 2026-07-01 — Stage 4: cleaning pipeline + funnel + editable rules
 - **Editable rules** (in the DB, admin-managed — no deploy to tune): `rule_config` thresholds

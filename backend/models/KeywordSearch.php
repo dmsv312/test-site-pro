@@ -88,10 +88,12 @@ class KeywordSearch extends Keyword
             $query->andWhere(['>=', 'avg_monthly_searches', (int) $this->minVolume]);
         }
 
-        // Kept = survived cleaning; Dropped = flagged by a rule (has a reason); All = no filter.
+        // Pipeline-wide, mutually exclusive: Kept = still surviving (no drop reason, past import —
+        // whether cleaned or prepared); Dropped = flagged by any stage (has a reason); All = both.
+        // Defined on drop_reason, not a single stage, so it stays correct as stage 5 advances rows.
         $status = $this->effectiveStatus();
         if ($status === self::STATUS_KEPT) {
-            $query->andWhere(['stage' => Keyword::STAGE_CLEANED]);
+            $query->andWhere(['drop_reason' => null])->andWhere(['<>', 'stage', Keyword::STAGE_IMPORTED]);
         } elseif ($status === self::STATUS_DROPPED) {
             $query->andWhere(['not', ['drop_reason' => null]]);
         }

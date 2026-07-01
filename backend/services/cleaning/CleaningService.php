@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace app\services\cleaning;
 
+use app\models\AdGroup;
 use app\models\BrandTerm;
 use app\models\Keyword;
 use app\models\RuleConfig;
@@ -17,17 +18,18 @@ use yii\db\Expression;
  * decision. It is a sequential funnel: a keyword dropped by an earlier rule is not evaluated by
  * later ones, so each row carries exactly one flag and the stage counts are disjoint.
  *
- * Scope: cleaning owns rows still at `imported`/`cleaned` and not yet claimed by a later stage.
- * Rows a future stage advanced (`prepared`/`ad_ready`) or flagged (`is_already_used`/
- * `is_forbidden`) are left completely untouched, so re-running cleaning can never regress
- * stage-5 progress or wipe a stage-5 drop reason.
+ * Cleaning is the head of the pipeline, so it is a pure function of the imported data: a run
+ * resets the whole downstream — every keyword back to `imported`, all cleaning *and* preparation
+ * flags cleared, and the derived `ad_group` table emptied — then recomputes from scratch. This is
+ * why re-cleaning invalidates stage 5: changing a threshold or brand term must reconsider every
+ * row (dedup is global — a canonical must never be hidden from its duplicates), and any downstream
+ * result computed from the old cleaned set is stale. After a re-clean, run preparation again.
  *
- * The run is idempotent: it first resets cleaning state for the owned rows, then recomputes, so
- * editing a threshold or a brand term and re-running always yields a deterministic result.
- * Dedup groups by the normalized term across the whole (owned) dataset; the canonical survivor
- * is the highest-volume row, ties broken by lowest id. The group link (`dedup_group_id`) is
- * written only when the canonical actually survives to `cleaned`, so no live row ever points at
- * a dropped canonical; merging the duplicates' metrics into the canonical is a later stage (5).
+ * The run is idempotent: reset then recompute always yields the same result regardless of history.
+ * Dedup groups by the normalized term across the whole dataset; the canonical survivor is the
+ * highest-volume row, ties broken by lowest id. The group link (`dedup_group_id`) is written only
+ * when the canonical actually survives to `cleaned`, so no live row ever points at a dropped
+ * canonical; merging the duplicates' metrics into the canonical is a later stage (5).
  */
 final class CleaningService
 {
@@ -48,14 +50,13 @@ final class CleaningService
         );
     }
 
-    /** The rows cleaning owns and may modify. */
-    private static function ownedScope(): array
+    /**
+     * Cleaning reconsiders every keyword — dedup is global, so no row may be hidden from it. The
+     * all-rows condition (`id` is a never-null PK) is used for both the reset and the reload.
+     */
+    private static function allRows(): array
     {
-        return [
-            'and',
-            ['stage' => [Keyword::STAGE_IMPORTED, Keyword::STAGE_CLEANED]],
-            ['is_already_used' => false, 'is_forbidden' => false],
-        ];
+        return ['not', ['id' => null]];
     }
 
     /**
@@ -69,17 +70,23 @@ final class CleaningService
         $transaction = $db->beginTransaction();
 
         try {
-            $scope = self::ownedScope();
+            $scope = self::allRows();
 
-            // 1. Reset cleaning state for owned rows only, so a re-run is deterministic and never
-            //    touches rows a later stage owns.
+            // 1. Reset the whole pipeline: every keyword back to `imported`, all cleaning AND
+            //    preparation flags cleared, and the derived ad groups removed. Cleaning is the head
+            //    of the pipeline, so a re-run is a deterministic pure function of the imported data
+            //    and never leaves stale downstream state. Re-run preparation afterwards.
+            AdGroup::deleteAll();
             Keyword::updateAll([
                 'is_junk' => false,
                 'is_duplicate' => false,
                 'is_brand' => false,
                 'below_volume' => false,
+                'is_already_used' => false,
+                'is_forbidden' => false,
                 'drop_reason' => null,
                 'dedup_group_id' => null,
+                'ad_group_id' => null,
                 'stage' => Keyword::STAGE_IMPORTED,
             ], $scope);
 
