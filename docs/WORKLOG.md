@@ -4,7 +4,20 @@
 
 ## Current status
 
-- **Done:** stage 7 — campaign preview + **Google Ads Editor CSV export**. A single combined,
+- **Done:** stage 9 — **deploy hardening + end-to-end smoke over the public URL**. A 15-check
+  live smoke passes against https://sitepro.dm312sv.online (guest gate → CSRF login → all seven
+  admin pages 200 → `text/csv` export download → error page leaks no stack trace). Hardening:
+  the session / CSRF / remember-me cookies are now `Secure; HttpOnly; SameSite=Lax` on the
+  HTTPS host; `COOKIE_VALIDATION_KEY` is **required in production** (no shared key in git);
+  nginx hides its version and the PHP `X-Powered-By`, and adds `X-Content-Type-Options`,
+  `X-Frame-Options: DENY`, `Referrer-Policy`. PHPStan / PHPCS / 83 unit tests still green;
+  pipeline data intact (107 keywords / 19 ads / 6 campaigns / 19 ad groups). **The project is
+  now stage 9/9 — all planned stages done.**
+- **Next:** none planned. Optional refinements only (hand-authored ad copy for the five
+  non-English languages; per-ad-group URL overrides; a smarter theme clusterer).
+- **Live:** https://sitepro.dm312sv.online · local http://127.0.0.1:8100 (admin login from `.env`)
+
+- **Prev:** stage 7 — campaign preview + **Google Ads Editor CSV export**. A single combined,
   Editor-compatible CSV (decision 29) recreates the whole tree: one campaign per language, its themed
   ad groups, every prepared keyword (match type **Phrase**, decision 30), and one responsive search
   ad per ad group — each pointing at its verified localized target URL. The export is **derived on
@@ -14,8 +27,6 @@
   **preview** at `/export` with a download button + `yii export/file [path]`; 10 unit tests. Verified:
   **126 rows** (107 keywords + 19 ads) across 6 campaigns / 19 ad groups; `/export` renders (200) and
   `/export/download` streams `text/csv` as an attachment.
-- **Next:** stage 9 — deploy hardening + smoke.
-- **Live:** https://sitepro.dm312sv.online · local http://127.0.0.1:8100 (admin login from `.env`)
 
 ## Stages
 
@@ -29,9 +40,37 @@
 | 6 | Ad generation (per language, correct URL) — stored/template + RSA validation | ✅ done |
 | 7 | Campaign preview + Google Ads Editor CSV export | ✅ done |
 | 8 | Real data collection → input files + labeled samples | ✅ done (early) |
-| 9 | Deploy hardening + smoke | planned |
+| 9 | Deploy hardening + smoke | ✅ done |
 
 ## Journal
+
+### 2026-07-02 — Stage 9: deploy hardening + end-to-end smoke over the public URL
+- **Live smoke (15 checks, all pass)** against https://sitepro.dm312sv.online, driving the real
+  Cloudflare-tunnel path (edge → nginx → php-fpm), not just localhost: a guest hitting `/` is
+  redirected to login (302); the login page issues a CSRF token; a form POST with the `.env`
+  credentials authenticates (302 + session cookie); all seven admin pages render authenticated
+  (`/import/index`, `/import/keywords`, `/cleaning`, `/prepare`, `/ads`, `/export`, `/rules` → 200);
+  `/export/download` streams `text/csv` as an attachment (127-line CSV); and `/site/error` shows a
+  generic page with no stack trace (debug off). Re-run green after every change.
+- **Auth cookies hardened.** The session (`PHPSESSID`), CSRF (`_csrf`) and remember-me (`_identity`)
+  cookies are now `Secure; HttpOnly; SameSite=Lax`. `Secure` is keyed off an `https://` `APP_URL`
+  (decision 33), so the public HTTPS host marks them Secure while local `http://127.0.0.1` dev keeps
+  login working. Verified over the wire on all three cookies.
+- **No shared cookie key in git.** `COOKIE_VALIDATION_KEY` is read from the environment and is now
+  **mandatory in production** — the app throws on boot if it's missing in prod (decision 33). The
+  previous committed fallback key was removed; local/dev falls back to an obviously-labeled
+  placeholder.
+- **nginx hardening (config-only, no image rebuild).** `server_tokens off` (response is `Server: nginx`,
+  no version), `fastcgi_hide_header X-Powered-By` (the PHP version no longer leaks), and baseline
+  security headers on every response — `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy: strict-origin-when-cross-origin`. Verified at the origin (bypassing Cloudflare)
+  and through the tunnel.
+- **Ops note:** `nginx.conf` is a **single-file bind mount**, which binds an inode — an atomic-rename
+  edit on the host leaves the container on the old inode, so `docker compose restart web` won't pick
+  up the change. Recreate the container (`docker compose up -d --force-recreate web`) to re-resolve
+  the mount. The `./backend` **directory** mount doesn't have this problem (PHP edits are live).
+- **Verified nothing drifted:** PHPStan (0 errors), PHPCS clean, full unit suite **83 pass** after the
+  config edits; pipeline data intact (107 prepared keywords / 19 ads / 6 campaigns / 19 ad groups).
 
 ### 2026-07-01 — Verified the export against the real Google Ads Editor import format; dropped `Ad Type`
 - **Checked the actual file against Google's documented Editor CSV format** (research + adversarial

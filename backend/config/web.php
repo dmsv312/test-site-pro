@@ -3,6 +3,29 @@
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
 
+// Cookie validation key comes from the environment. In production it is mandatory —
+// we never ship a shared committed key (a bad idea and a secret in git). Locally a
+// clearly-labeled placeholder is used so a fresh clone runs without configuration.
+$cookieValidationKey = getenv('COOKIE_VALIDATION_KEY') ?: '';
+if ($cookieValidationKey === '') {
+    if (YII_ENV_PROD) {
+        throw new \yii\base\InvalidConfigException(
+            'COOKIE_VALIDATION_KEY must be set in production (see .env.example).'
+        );
+    }
+    $cookieValidationKey = 'dev-local-insecure-key-not-for-production';
+}
+
+// The public site is served only over HTTPS (Cloudflare edge; the origin listens on
+// localhost). Mark auth-bearing cookies Secure in that case so they never travel over
+// plain HTTP; local http://127.0.0.1 dev keeps them non-Secure so login still works.
+$secureCookies = str_starts_with((string) getenv('APP_URL'), 'https://');
+$cookieDefaults = [
+    'httpOnly' => true,
+    'secure' => $secureCookies,
+    'sameSite' => \yii\web\Cookie::SAME_SITE_LAX,
+];
+
 $config = [
     'id' => 'basic',
     'name' => 'Site.pro Keyword Manager',
@@ -16,8 +39,15 @@ $config = [
     ],
     'components' => [
         'request' => [
-            // Ключ валидации cookie — из окружения, с дефолтом для локального запуска.
-            'cookieValidationKey' => getenv('COOKIE_VALIDATION_KEY') ?: 'Da91KAot67AlPEHni-gc990WZ-iqWU2Y',
+            'cookieValidationKey' => $cookieValidationKey,
+            'csrfCookie' => $cookieDefaults,
+        ],
+        'session' => [
+            'cookieParams' => [
+                'httponly' => true,
+                'secure' => $secureCookies,
+                'samesite' => \yii\web\Cookie::SAME_SITE_LAX,
+            ],
         ],
         'cache' => [
             'class' => \yii\caching\FileCache::class,
@@ -25,6 +55,8 @@ $config = [
         'user' => [
             'identityClass' => \app\models\User::class,
             'enableAutoLogin' => true,
+            // Remember-me cookie carries an auth token — same Secure/HttpOnly hardening.
+            'identityCookie' => ['name' => '_identity'] + $cookieDefaults,
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',

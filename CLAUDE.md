@@ -110,6 +110,15 @@ nothing sensitive is hard-coded in PHP. Code is bind-mounted from the host: edit
 - `docker compose` in production mode (`YII_ENV=prod`). `web` listens on `127.0.0.1:8100`,
   exposed via a dedicated Cloudflare Tunnel (isolated account).
 - Live demo: **https://sitepro.dm312sv.online**
+- **Hardening (decision 33):** auth cookies (session / CSRF / remember-me) are
+  `Secure; HttpOnly; SameSite=Lax` when `APP_URL` is `https://`; `COOKIE_VALIDATION_KEY` is
+  **required in prod** (boot fails without it — no shared key in git); nginx sets
+  `server_tokens off`, hides `X-Powered-By`, and adds `X-Content-Type-Options` /
+  `X-Frame-Options: DENY` / `Referrer-Policy`.
+- **Ops caveat:** `docker/nginx.conf` is a **single-file bind mount** (binds an inode). An
+  atomic-rename edit leaves the container on the stale inode, so `docker compose restart web`
+  won't apply it — run `docker compose up -d --force-recreate web`. The `./backend` **directory**
+  mount reflects PHP edits live (no rebuild).
 
 ## Current status
 

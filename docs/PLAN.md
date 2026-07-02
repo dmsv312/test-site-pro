@@ -294,10 +294,26 @@ Recorded as context → decision → consequence.
     Both run green; the pipeline's outputs were re-verified identical, so every fix was
     behaviour-preserving.
 
+33. **Deploy hardening: HTTPS-only Secure cookies and a mandatory cookie key, not a trusted-proxy
+    chain.** The public site is served only over HTTPS (Cloudflare edge; the origin listens on
+    `127.0.0.1:8100` and is reachable only through the tunnel), but Yii saw the tunnel's plain HTTP,
+    so `isSecureConnection` was false and the auth cookies shipped without `Secure`. → Rather than
+    open `request.trustedHosts` to read `X-Forwarded-Proto` (an IP-spoofing foot-gun if the origin
+    were ever exposed directly, and needless for a localhost-only origin), the app marks the session,
+    CSRF and remember-me cookies `Secure; HttpOnly; SameSite=Lax` whenever `APP_URL` is `https://` —
+    correct for this topology and simpler. `COOKIE_VALIDATION_KEY` is read from the environment and is
+    **mandatory in production** (the app throws on boot if missing); the previously committed fallback
+    key was removed so no shared signing key lives in git. nginx does the rest at the edge of the
+    container (config-only): `server_tokens off`, `fastcgi_hide_header X-Powered-By`, and
+    `X-Content-Type-Options` / `X-Frame-Options: DENY` / `Referrer-Policy`. Verified by a 15-check live
+    smoke over the public URL. HSTS is intentionally left to the Cloudflare edge (adding it at the
+    origin risks `includeSubDomains` bleeding onto the shared `dm312sv.online` siblings).
+
 ## Build stages
 
 See [`WORKLOG.md`](WORKLOG.md) for the stage table and live status. In short: spike ✅ →
-skeleton ✅ → import & model ✅ → cleaning ✅ → prepare ✅ → ad generation ✅ → export ✅ → deploy (next).
+skeleton ✅ → import & model ✅ → cleaning ✅ → prepare ✅ → ad generation ✅ → export ✅ →
+deploy hardening + smoke ✅. **All planned stages done (9/9).**
 
 ## Open questions
 
