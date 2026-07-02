@@ -46,6 +46,6 @@ final class AlreadyUsedRule
     /** @return string|null a drop reason, or null if the term is not already used */
     public function reason(string $normalizedTerm): ?string
     {
-        return isset($this->used[$normalizedTerm]) ? 'already used in Google Ads' : null;
+        return isset($this->used[$normalizedTerm]) ? 'Already advertised in Google Ads' : null;
     }
 }

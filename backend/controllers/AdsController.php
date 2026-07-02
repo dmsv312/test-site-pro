@@ -47,12 +47,12 @@ class AdsController extends Controller
         Yii::$app->session->setFlash(
             'success',
             sprintf(
-                'Generated %d ad(s) across %d language(s): %d from stored copy, %d from templates%s.',
+                'Created %d ad(s) across %d language(s): %d curated, %d from templates%s.',
                 $summary['generated'],
                 $summary['languages'],
                 $summary['byStored'],
                 $summary['byTemplate'],
-                $summary['invalid'] > 0 ? ", {$summary['invalid']} flagged invalid" : '',
+                $summary['invalid'] > 0 ? ", {$summary['invalid']} need attention" : '',
             ),
         );
 

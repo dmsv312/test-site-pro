@@ -33,7 +33,7 @@ final class BrandRule
             // boundaries, so a brand never matches inside a longer word.
             $pattern = '/(?<![\p{L}\p{N}])' . preg_quote($brand, '/') . '(?![\p{L}\p{N}])/u';
             if (preg_match($pattern, $normalizedTerm) === 1) {
-                return "brand: \"{$brand}\"";
+                return "Brand term: \"{$brand}\"";
             }
         }
 

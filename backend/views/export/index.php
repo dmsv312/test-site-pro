@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use app\services\export\GoogleAdsEditorExport;
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
@@ -17,13 +16,11 @@ $byLanguage = $summary['byLanguage'];
 ?>
 <h1 class="mb-0"><?= Html::encode($this->title) ?></h1>
 <p class="text-muted mt-2">
-    Both artifacts recreate the same campaign tree — one campaign per language, its themed ad groups,
-    every prepared keyword (match type <strong><?= Html::encode((string) $summary['matchType']) ?></strong>),
-    and one responsive search ad per ad group, each pointing at its verified localized target URL. Like
-    the rest of the pipeline they are derived on demand from the current state, so they always reflect
-    the latest <?= Html::a('preparation', ['/prepare/index']) ?> and
-    <?= Html::a('ad generation', ['/ads/index']) ?>. Google Ads has <strong>two</strong> import paths and
-    they use different file formats — pick the one matching the tool you'll use.
+    Download your campaigns ready to import into Google Ads — one campaign per language, its ad groups,
+    every keyword (match type <strong><?= Html::encode((string) $summary['matchType']) ?></strong>), and
+    one ad per group pointing at the right landing page. The download always reflects your latest
+    <?= Html::a('campaigns', ['/prepare/index']) ?> and <?= Html::a('ads', ['/ads/index']) ?>.
+    Google Ads offers <strong>two</strong> ways to import, so pick the file that matches how you work.
 </p>
 
 <div class="row g-3 mt-1">
@@ -32,8 +29,8 @@ $byLanguage = $summary['byLanguage'];
             <div class="card-body d-flex flex-column">
                 <h2 class="h5 card-title">Google Ads Editor <span class="text-muted fw-normal">(desktop app)</span></h2>
                 <p class="card-text small mb-2">
-                    A single combined <code>.csv</code> — keywords and ads in one file, the entity type
-                    inferred from the columns each row fills. This is the desktop Editor's format.
+                    One <code>.csv</code> file with your keywords and ads together — the format the
+                    desktop Google Ads Editor imports.
                 </p>
                 <p class="card-text small text-muted mb-3">
                     Import: <strong>Account → Import → From file</strong>, then review and post.
@@ -51,11 +48,11 @@ $byLanguage = $summary['byLanguage'];
     <div class="col-md-6">
         <div class="card h-100">
             <div class="card-body d-flex flex-column">
-                <h2 class="h5 card-title">Google Ads web UI <span class="text-muted fw-normal">(browser)</span></h2>
+                <h2 class="h5 card-title">Google Ads website <span class="text-muted fw-normal">(browser)</span></h2>
                 <p class="card-text small mb-2">
-                    A <code>.zip</code> of one sheet per entity — campaigns, ad groups, keywords, ads —
-                    because the web tool has no combined format. Campaigns import <strong>paused,
-                    without a budget</strong> (set one before enabling).
+                    A <code>.zip</code> with a separate sheet for campaigns, ad groups, keywords, and
+                    ads — the format the Google Ads website imports. Campaigns arrive <strong>paused,
+                    without a budget</strong>, so nothing spends until you set one and turn them on.
                 </p>
                 <p class="card-text small text-muted mb-3">
                     Import: <strong>Tools → Bulk actions → Uploads</strong>, one sheet at a time, in the
@@ -75,13 +72,13 @@ $byLanguage = $summary['byLanguage'];
 
 <?php if ($summary['adGroups'] === 0): ?>
     <div class="alert alert-warning">
-        No campaigns yet. Run <?= Html::a('preparation', ['/prepare/index']) ?>, then
-        <?= Html::a('generate ads', ['/ads/index']) ?>, then export.
+        No campaigns yet. <?= Html::a('Build your campaigns', ['/prepare/index']) ?> and
+        <?= Html::a('create ads', ['/ads/index']) ?> first, then export.
     </div>
 <?php elseif (!$ready): ?>
     <div class="alert alert-info">
-        <?= (int) $summary['adGroups'] ?> ad group(s) ready, but no ads generated yet — run
-        <?= Html::a('ad generation', ['/ads/index']) ?> before exporting.
+        <?= (int) $summary['adGroups'] ?> ad group(s) ready, but no ads yet —
+        <?= Html::a('create ads', ['/ads/index']) ?> before exporting.
     </div>
 <?php endif; ?>
 
@@ -101,7 +98,7 @@ $byLanguage = $summary['byLanguage'];
     <div class="col-6 col-lg-3">
         <div class="card h-100"><div class="card-body text-center">
             <div class="display-6"><?= (int) $summary['keywordRows'] ?></div>
-            <div class="text-muted small">keyword rows</div>
+            <div class="text-muted small">keywords</div>
         </div></div>
     </div>
     <div class="col-6 col-lg-3">
@@ -114,23 +111,12 @@ $byLanguage = $summary['byLanguage'];
 
 <?php if ($summary['groupsWithoutAd'] > 0): ?>
     <div class="alert alert-warning py-2 small">
-        <?= (int) $summary['groupsWithoutAd'] ?> ad group(s) have no valid ad
-        <?= $summary['invalidAds'] > 0 ? '(' . (int) $summary['invalidAds'] . ' failed validation) ' : '' ?>—
-        their keywords are still exported, but without an ad. Re-run
-        <?= Html::a('ad generation', ['/ads/index']) ?> to fill them.
+        <?= (int) $summary['groupsWithoutAd'] ?> ad group(s) don't have a usable ad yet
+        <?= $summary['invalidAds'] > 0 ? '(' . (int) $summary['invalidAds'] . " didn't pass checks) " : '' ?>—
+        their keywords still export, just without an ad.
+        <?= Html::a('Create ads', ['/ads/index']) ?> again to fill the gaps.
     </div>
 <?php endif; ?>
-
-<p class="text-muted small">
-    Editor CSV layout — one row per entity, columns filled by type:
-    <span class="badge text-bg-light border">keyword row</span>
-    <code>Campaign · Ad Group · Keyword · Match Type · Final URL</code> ·
-    <span class="badge text-bg-light border">ad row</span>
-    <code>Campaign · Ad Group · Headline 1…<?= GoogleAdsEditorExport::MAX_HEADLINES ?>
-        · Description 1…<?= GoogleAdsEditorExport::MAX_DESCRIPTIONS ?> · Path 1/2 · Final URL</code>
-    (Editor infers the responsive search ad from the headline/description columns — no ad-type column).
-    UTF-8, RFC-4180 quoting.
-</p>
 
 <?php foreach ($byLanguage as $language => $data): ?>
     <div class="card mt-3">
@@ -176,11 +162,12 @@ $byLanguage = $summary['byLanguage'];
                         <td class="text-end"><span class="badge text-bg-secondary"><?= (int) $group->keyword_count ?></span></td>
                         <td>
                             <?php if ($valid): ?>
-                                <span class="badge text-bg-<?= $ad->generated_by === app\models\GeneratedAd::BY_STORED ? 'primary' : 'light' ?>">
-                                    <?= Html::encode($ad->generated_by) ?>
+                                <?php $isCurated = $ad->generated_by === app\models\GeneratedAd::BY_STORED; ?>
+                                <span class="badge text-bg-<?= $isCurated ? 'primary' : 'light' ?>">
+                                    <?= $isCurated ? 'Curated' : 'Template' ?>
                                 </span>
                             <?php elseif ($ad !== null): ?>
-                                <span class="badge text-bg-danger">invalid</span>
+                                <span class="badge text-bg-danger">Needs attention</span>
                             <?php else: ?>
                                 <span class="text-muted small">—</span>
                             <?php endif; ?>

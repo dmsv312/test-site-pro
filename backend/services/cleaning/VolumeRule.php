@@ -26,7 +26,7 @@ final class VolumeRule
         }
 
         if ($avgMonthlySearches < $this->minVolume) {
-            return "below volume: {$avgMonthlySearches} < {$this->minVolume}";
+            return "Search volume too low ({$avgMonthlySearches}/mo, min {$this->minVolume})";
         }
 
         return null;

@@ -29,7 +29,7 @@ flowchart TD
     V --> U[drop already-used] --> F[drop forbidden] --> M[merge] --> G[group by language]
   end
   subgraph Ship
-    G --> AD[generate ads<br/>local Claude Code CLI] --> PV[preview]
+    G --> AD[generate ads<br/>copy written locally<br/>with Claude Code CLI, stored] --> PV[preview]
     G --> EX[Google Ads Editor CSV]
   end
 ```
@@ -45,11 +45,13 @@ Components:
 - **Preparation** — drop already-used and forbidden keywords, merge duplicates (normalize:
   lowercase, trim, collapse whitespace, sort tokens; aggregate volume; keep a canonical
   term), then group by language.
-- **Ad generation** — a service asks a local Claude Code CLI on the host to write a
-  responsive search ad for each language group (in that language, with the correct target
-  URL). Output is validated as untrusted input (headline/description length limits, language,
-  required URL) and cached; a template fallback covers the CLI being unavailable. No
-  per-call paid API.
+- **Ad generation** — the ad copy is written **ahead of time, locally, with the Claude Code
+  CLI** and stored as JSON (keyed by `language:theme_key`); the deployed service prefers that
+  stored copy and falls back to a deterministic per-language template when a group has none.
+  Each ad names one responsive search ad per group (in that language, with the correct target
+  URL) and is validated as untrusted input (headline/description length limits, valid UTF-8,
+  required URL). So the deployed host runs no generation, makes no per-call paid API request,
+  and holds no AI credentials.
 - **Export** — two artifacts for the two Google Ads import paths (decision 34): a Google Ads Editor
   (desktop) combined CSV, and a web-UI bulk-upload ZIP (one CSV per entity). Formatting is shared in
   one `CsvWriter`.

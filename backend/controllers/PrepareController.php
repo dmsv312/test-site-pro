@@ -49,9 +49,9 @@ class PrepareController extends Controller
         Yii::$app->session->setFlash(
             'success',
             sprintf(
-                'Preparation done: %d of %d candidates prepared (dropped %d already-used, %d forbidden), '
-                . 'grouped into %d ad group(s) across %d language(s). '
-                . 'Ad generation was reset — re-run it to refresh the ads.',
+                'Campaigns built — %d of %d keywords are ready (removed %d already-advertised, %d blocked), '
+                . 'organized into %d ad group(s) across %d language(s). '
+                . 'Your ads were cleared — create them again to refresh.',
                 $summary['prepared'],
                 $summary['candidates'],
                 $dropped['already_used'],

@@ -19,14 +19,14 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <h1><?= Html::encode($this->title) ?></h1>
 <p class="text-muted">
-    Upload keyword source files (CSV or JSON), then review every imported row in the admin area.
-    Later, the same pipeline can read these sources from an API instead of files.
+    Bring your keyword research together in one place. Upload exports from Google Ads, Search
+    Console, or Ahrefs — as CSV or JSON — and review every keyword before it goes into a campaign.
 </p>
 
 <div class="row g-4">
     <div class="col-lg-5">
         <div class="card">
-            <div class="card-header">Upload a source file</div>
+            <div class="card-header">Upload keywords</div>
             <div class="card-body">
                 <?php $form = ActiveForm::begin([
                     'action' => ['upload'],

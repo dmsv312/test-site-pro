@@ -7,7 +7,7 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var array<string, mixed> $summary */
 
-$this->title = 'Cleaning funnel';
+$this->title = 'Cleaning';
 $this->params['breadcrumbs'][] = $this->title;
 
 $total = (int) $summary['total'];
@@ -24,22 +24,23 @@ $reasons = $summary['reasons'];
     <?= Html::endForm() ?>
 </div>
 <p class="text-muted mt-2">
-    Cleaning flags keywords in sequence — junk → duplicates → brand → low volume — and records
-    why each was dropped, without deleting anything. Editing the
-    <?= Html::a('rules', ['/rules/index']) ?> and re-running recomputes this funnel.
+    Filter out the keywords that aren't worth advertising — junk terms, duplicates, brand names,
+    and searches with too little traffic. Nothing is deleted: every keyword you remove keeps a short
+    note on why, so you can always check the decision. Adjust the
+    <?= Html::a('rules', ['/rules/index']) ?> and run it again to update the results.
 </p>
 
 <?php if (!$summary['hasRun']): ?>
     <div class="alert alert-info">
-        Cleaning hasn’t run yet. <?= $total ?> keyword(s) imported —
-        press “Run cleaning” to score them.
+        Nothing cleaned yet. <?= $total ?> keyword(s) imported —
+        run cleaning to see what's worth keeping.
     </div>
 <?php endif; ?>
 
 <div class="row g-4">
     <div class="col-lg-7">
         <div class="card h-100">
-            <div class="card-header">Funnel</div>
+            <div class="card-header">Keywords at each step</div>
             <div class="card-body">
                 <?php foreach ($funnel as $i => $step): ?>
                     <?php
@@ -69,11 +70,11 @@ $reasons = $summary['reasons'];
 
                 <hr>
                 <div class="d-flex justify-content-between">
-                    <span class="text-muted">Kept (ad-candidate keywords)</span>
+                    <span class="text-muted">Kept for ads</span>
                     <strong class="text-success"><?= Yii::$app->formatter->asInteger($summary['survivors']) ?></strong>
                 </div>
                 <div class="d-flex justify-content-between">
-                    <span class="text-muted">Dropped</span>
+                    <span class="text-muted">Removed</span>
                     <strong><?= Yii::$app->formatter->asInteger($summary['dropped']['total']) ?></strong>
                 </div>
             </div>
@@ -82,10 +83,10 @@ $reasons = $summary['reasons'];
 
     <div class="col-lg-5">
         <div class="card h-100">
-            <div class="card-header">Why keywords were dropped</div>
+            <div class="card-header">Why keywords were removed</div>
             <div class="card-body">
                 <?php if ($reasons === []): ?>
-                    <p class="text-muted fst-italic mb-0">Nothing dropped yet.</p>
+                    <p class="text-muted fst-italic mb-0">Nothing removed yet.</p>
                 <?php else: ?>
                     <table class="table table-sm align-middle mb-0">
                         <tbody>

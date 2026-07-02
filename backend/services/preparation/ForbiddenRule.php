@@ -28,7 +28,7 @@ final class ForbiddenRule
             }
             $pattern = '/(?<![\p{L}\p{N}])' . preg_quote($term, '/') . '(?![\p{L}\p{N}])/u';
             if (preg_match($pattern, $normalizedTerm) === 1) {
-                return "forbidden: \"{$term}\"";
+                return "Blocked term: \"{$term}\"";
             }
         }
 

@@ -44,7 +44,7 @@ class ExportController extends Controller
         if (!$hasAd) {
             Yii::$app->session->setFlash(
                 'warning',
-                'Nothing to export yet — run preparation and ad generation first.',
+                'Nothing to export yet — build campaigns and create ads first.',
             );
 
             return $this->redirect(['index']);
@@ -67,7 +67,7 @@ class ExportController extends Controller
         if ((int) ExportService::snapshot()['adRows'] === 0) {
             Yii::$app->session->setFlash(
                 'warning',
-                'Nothing to export yet — run preparation and ad generation first.',
+                'Nothing to export yet — build campaigns and create ads first.',
             );
 
             return $this->redirect(['index']);
@@ -75,7 +75,7 @@ class ExportController extends Controller
 
         $zip = $service->toBulkZip();
         if ($zip === '') {
-            Yii::$app->session->setFlash('error', 'Could not build the bulk-upload archive.');
+            Yii::$app->session->setFlash('error', "We couldn't build the download. Please try again.");
 
             return $this->redirect(['index']);
         }

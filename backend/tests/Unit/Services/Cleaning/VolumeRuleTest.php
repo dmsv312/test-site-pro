@@ -23,8 +23,8 @@ final class VolumeRuleTest extends \Codeception\Test\Unit
 
     public function testDropsBelowThreshold(): void
     {
-        verify($this->rule->reason(10))->stringContainsString('below volume');
-        verify($this->rule->reason(0))->stringContainsString('below volume');
+        verify($this->rule->reason(10))->stringContainsString('volume too low');
+        verify($this->rule->reason(0))->stringContainsString('volume too low');
     }
 
     public function testKeepsAtOrAboveThreshold(): void

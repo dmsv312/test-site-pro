@@ -26,32 +26,32 @@ final class JunkRuleTest extends \Codeception\Test\Unit
 
     public function testSingleCharacter(): void
     {
-        verify($this->rule->reason('a'))->stringContainsString('single character');
+        verify($this->rule->reason('a'))->stringContainsString('Single character');
     }
 
     public function testDigitsOnly(): void
     {
-        verify($this->rule->reason('123456'))->stringContainsString('digits only');
-        verify($this->rule->reason('12 50'))->stringContainsString('digits only');
+        verify($this->rule->reason('123456'))->stringContainsString('Numbers only');
+        verify($this->rule->reason('12 50'))->stringContainsString('Numbers only');
     }
 
     public function testSymbolsOnly(): void
     {
-        verify($this->rule->reason('!!!'))->stringContainsString('symbols only');
-        verify($this->rule->reason('@ # $'))->stringContainsString('symbols only');
+        verify($this->rule->reason('!!!'))->stringContainsString('Symbols only');
+        verify($this->rule->reason('@ # $'))->stringContainsString('Symbols only');
     }
 
     public function testTooLong(): void
     {
-        verify($this->rule->reason(str_repeat('x', 81)))->stringContainsString('too long');
+        verify($this->rule->reason(str_repeat('x', 81)))->stringContainsString('Too long');
         // Exactly at the limit is fine (but a single repeated char is not a vowel-free short token).
         verify($this->rule->reason('word ' . str_repeat('a', 75)))->null();
     }
 
     public function testStopwordOnly(): void
     {
-        verify($this->rule->reason('the'))->stringContainsString('stopword only');
-        verify($this->rule->reason('for the'))->stringContainsString('stopword only');
+        verify($this->rule->reason('the'))->stringContainsString('Common words only');
+        verify($this->rule->reason('for the'))->stringContainsString('Common words only');
         // A stopword mixed with a real token is kept.
         verify($this->rule->reason('builder for'))->null();
     }

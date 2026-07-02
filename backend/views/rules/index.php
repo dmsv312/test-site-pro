@@ -13,7 +13,7 @@ use yii\helpers\Html;
 /** @var app\models\BrandTerm $newBrand */
 /** @var app\models\ForbiddenTerm $newForbidden */
 
-$this->title = 'Cleaning rules';
+$this->title = 'Rules & filters';
 $this->params['breadcrumbs'][] = $this->title;
 
 /** Render one editable term list (brand / forbidden) as a card. */
@@ -66,8 +66,8 @@ $termList = function (string $list, string $title, string $help, array $terms, T
 ?>
 <h1><?= Html::encode($this->title) ?></h1>
 <p class="text-muted">
-    The thresholds and lists below drive the cleaning pipeline. Editing them here changes how the
-    next cleaning run scores keywords — no deploy needed. Re-run cleaning after a change to apply it.
+    Control how keywords are filtered. Change the thresholds and lists here, then run cleaning again
+    to apply them — no developer needed.
 </p>
 
 <div class="card mb-4">
@@ -101,8 +101,8 @@ $termList = function (string $list, string $title, string $help, array $terms, T
         <?= $termList(
             'brand',
             'Brand terms',
-            'Keywords whose normalized term contains any of these are dropped as brand names '
-                . '(site.pro’s own brand plus competitor brands).',
+            'Keywords containing any of these brand names are removed — your own brand and '
+                . 'competitors’.',
             $brandTerms,
             $newBrand,
         ) ?>
@@ -110,8 +110,8 @@ $termList = function (string $list, string $title, string $help, array $terms, T
     <div class="col-lg-6">
         <?= $termList(
             'forbidden',
-            'Forbidden terms',
-            'Terms never allowed into a campaign. Applied during preparation (stage 5).',
+            'Blocked terms',
+            'Terms that should never appear in a campaign. Removed when you build campaigns.',
             $forbiddenTerms,
             $newForbidden,
         ) ?>

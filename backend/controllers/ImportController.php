@@ -75,7 +75,7 @@ class ImportController extends Controller
 
         if (!$model->validate()) {
             $errors = implode(' ', array_merge(...array_values($model->getErrors())));
-            Yii::$app->session->setFlash('error', 'Upload rejected: ' . $errors);
+            Yii::$app->session->setFlash('error', "We couldn't import that file: " . $errors);
 
             return $this->redirect(['index']);
         }

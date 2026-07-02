@@ -96,7 +96,7 @@ class RulesController extends Controller
         if ($model->save()) {
             Yii::$app->session->setFlash(
                 'success',
-                'Added “' . Html::encode($model->term) . "” to the {$list} list.",
+                'Added “' . Html::encode($model->term) . '” to the ' . ($list === 'forbidden' ? 'blocked' : 'brand') . ' list.',
             );
         } else {
             Yii::$app->session->setFlash('error', implode(' ', $model->getFirstErrors()));
@@ -113,7 +113,7 @@ class RulesController extends Controller
         $model->delete();
         Yii::$app->session->setFlash(
             'success',
-            'Removed “' . Html::encode($term) . "” from the {$list} list.",
+            'Removed “' . Html::encode($term) . '” from the ' . ($list === 'forbidden' ? 'blocked' : 'brand') . ' list.',
         );
 
         return $this->redirect(['index']);

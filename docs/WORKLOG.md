@@ -6,6 +6,10 @@
 
 ## Current status
 
+- **Done (polish):** **UI copy rewritten in a product voice** across the whole admin app, plus two doc
+  fixes (this WORKLOG's test count and the PLAN's ad-generation wording). Reviewed by a 4-lens
+  adversarial copy pass; 12 confirmed findings fixed (incl. one funnel-label/number mismatch). 94 unit
+  tests / PHPStan 0 / PHPCS clean; pipeline data intact.
 - **Done (refinement):** **dual Google Ads export** — the existing Editor (desktop) CSV **plus** a new
   web-UI bulk-upload ZIP, after researching Google's two import paths against official docs (decision
   34). The web tool has no combined format, so the ZIP holds one CSV per entity (campaigns → ad groups
@@ -14,14 +18,14 @@
   `GoogleAdsBulkUploadExport` + a shared `CsvWriter`; `/export/download-bulk` and `yii export/bulk`;
   the `/export` preview now presents both artifacts with import instructions (and the stale "Ad Type"
   layout note is fixed). Verified live over the public URL (Editor CSV 127 lines; ZIP valid, 5 files);
-  **91 unit tests** (was 83), PHPStan 0 / PHPCS clean.
+  **94 unit tests**, PHPStan 0 / PHPCS clean.
 - **Done:** stage 9 — **deploy hardening + end-to-end smoke over the public URL**. A 15-check
   live smoke passes against https://sitepro.dm312sv.online (guest gate → CSRF login → all seven
   admin pages 200 → `text/csv` export download → error page leaks no stack trace). Hardening:
   the session / CSRF / remember-me cookies are now `Secure; HttpOnly; SameSite=Lax` on the
   HTTPS host; `COOKIE_VALIDATION_KEY` is **required in production** (no shared key in git);
   nginx hides its version and the PHP `X-Powered-By`, and adds `X-Content-Type-Options`,
-  `X-Frame-Options: DENY`, `Referrer-Policy`. PHPStan / PHPCS / 83 unit tests still green;
+  `X-Frame-Options: DENY`, `Referrer-Policy`. PHPStan / PHPCS / 94 unit tests still green;
   pipeline data intact (107 keywords / 19 ads / 6 campaigns / 19 ad groups). **The project is
   now stage 9/9 — all planned stages done.**
 - **Next:** none planned. Optional refinements only (per-ad-group URL overrides; a smarter
@@ -54,6 +58,31 @@
 | 9 | Deploy hardening + smoke | ✅ done |
 
 ## Journal
+
+### 2026-07-02 — UI copy rewritten in a product voice (+ two doc fixes)
+- **Why:** the admin UI read like an engineering log of the pipeline stages rather than a product. Reworked
+  every user-facing string into plain product copy — keeping the auditability (each removed keyword still
+  shows *why*) but dropping internal jargon (funnel/pipeline/stage N/canonical/net-new/derived-on-demand/
+  RFC-4180/offline-authored/AI-credentials).
+- **What:** rewrote intros, card headers, buttons, empty states, stat-tile labels, and the login/error
+  pages; humanized the funnel step labels, the drop-reason labels (e.g. `junk: digits only` → `Numbers
+  only`; `below volume: 12 < 50` → `Search volume too low (12/mo, min 50)`; `brand:"wix"` → `Brand term:
+  "wix"`), the flash messages, and the ad-source badges (`stored`/`template` → `Curated`/`Template`).
+  Kept the legitimate domain terms (keyword, campaign, ad group, responsive search ad, match type,
+  Google Ads). Coupled unit-test assertions updated to the new reason strings.
+- **Adversarial review:** ran a 4-lens copy review (jargon / voice / honesty / copy-vs-data) with every
+  finding independently verified — 12 confirmed of 16, all fixed. Notably one real defect: the cleaning
+  and preparation funnels display the *remaining* count, so reworded drop-action labels ("Junk removed")
+  contradicted the number shown — restored remaining-basis labels ("Kept after junk / duplicates / brand
+  terms"). Also unified the create/recreate verb, "Landing page" (was "Target URL"), a Title-cased
+  single-term "Already advertised in Google Ads", and dropped the "ready-to-launch" overclaim →
+  "export-ready" (campaigns import paused with no budget).
+- **Two doc fixes:** this WORKLOG's Current-status test count 91/83 → **94** (matches the journal); the
+  PLAN's ad-generation wording corrected — copy is generated **locally, ahead of time, with the Claude
+  Code CLI** and stored, and the host runs no generation (the old text implied a live host CLI call).
+- **Verified:** 94 unit tests, PHPStan 0, PHPCS clean; pipeline re-run intact (378 → 154 → 107 → 19 ad
+  groups / 19 ads); all seven admin pages render 200 authenticated with the new copy; drop-reason labels
+  refreshed in the DB.
 
 ### 2026-07-02 — Stored ad copy now covers all six languages (was English-only)
 - **Why:** every ad group already got an ad, but only the six English groups used hand-authored

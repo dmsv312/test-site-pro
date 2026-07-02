@@ -154,9 +154,9 @@ final class PreparationService
             'mergedGroups' => $mergedGroups,
             'hasRun' => ($alreadyUsed + $forbidden) > 0 || $count(['stage' => Keyword::STAGE_PREPARED]) > 0,
             'funnel' => [
-                ['label' => 'Cleaned (candidates)', 'remaining' => $candidates, 'dropped' => 0],
-                ['label' => 'After already-used', 'remaining' => $afterUsed, 'dropped' => $alreadyUsed],
-                ['label' => 'Prepared (after forbidden)', 'remaining' => $afterForbidden, 'dropped' => $forbidden],
+                ['label' => 'Cleaned keywords', 'remaining' => $candidates, 'dropped' => 0],
+                ['label' => 'Kept after already advertised', 'remaining' => $afterUsed, 'dropped' => $alreadyUsed],
+                ['label' => 'Ready for campaigns', 'remaining' => $afterForbidden, 'dropped' => $forbidden],
             ],
             'grouping' => GroupingService::snapshot(),
         ];

@@ -42,29 +42,29 @@ final class JunkRule
         $term = trim($normalizedTerm);
 
         if ($term === '') {
-            return 'junk: empty';
+            return 'Empty term';
         }
 
         $length = mb_strlen($term, 'UTF-8');
         if ($length === 1) {
-            return 'junk: single character';
+            return 'Single character';
         }
 
         // No letter at all → it's digits or symbols, never a keyword.
         if (preg_match('/\p{L}/u', $term) !== 1) {
-            return preg_match('/\p{N}/u', $term) === 1 ? 'junk: digits only' : 'junk: symbols only';
+            return preg_match('/\p{N}/u', $term) === 1 ? 'Numbers only' : 'Symbols only';
         }
 
         if ($length > $this->maxTermLength) {
-            return "junk: too long (> {$this->maxTermLength} chars)";
+            return "Too long (over {$this->maxTermLength} characters)";
         }
 
         if ($this->isStopwordOnly($term)) {
-            return 'junk: stopword only';
+            return 'Common words only';
         }
 
         if ($this->hasGibberishToken($term)) {
-            return 'junk: unpronounceable token (gibberish)';
+            return 'Looks like gibberish';
         }
 
         return null;

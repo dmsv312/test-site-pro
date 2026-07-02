@@ -20,10 +20,10 @@ $this->params['breadcrumbs'][] = $this->title;
 // Pipeline views (the prominent control): each is a stage-aware lens on the one table. The tab
 // badges double as the pipeline counts, so they reconcile with the Cleaning and Prepare funnels.
 $viewTabs = [
-    KeywordSearch::VIEW_ALL => ['All', 'Every imported keyword.'],
-    KeywordSearch::VIEW_CLEANED => ['Cleaned', 'Survived cleaning — the ad-candidate set.'],
-    KeywordSearch::VIEW_PREPARED => ['Prepared', 'Net-new, grouped into campaigns — ready for ads.'],
-    KeywordSearch::VIEW_DROPPED => ['Dropped', 'Flagged at some stage; the reason is in the last column.'],
+    KeywordSearch::VIEW_ALL => ['All', 'Every keyword you\'ve imported.'],
+    KeywordSearch::VIEW_CLEANED => ['Cleaned', 'Kept after cleaning — your ad candidates.'],
+    KeywordSearch::VIEW_PREPARED => ['Prepared', 'Grouped into campaigns — ready for ads.'],
+    KeywordSearch::VIEW_DROPPED => ['Removed', 'Removed along the way — see why in the last column.'],
 ];
 $currentView = $searchModel->effectiveView();
 [$currentLabel, $currentBlurb] = $viewTabs[$currentView];
@@ -35,15 +35,13 @@ $total = (int) ($dataProvider->totalCount);
 ?>
 <h1><?= Html::encode($this->title) ?></h1>
 <p class="text-muted">
-    Every imported keyword, normalized into one table. The tabs below are pipeline views; the column
-    filters (source, language, volume, competition, drop reason) narrow whichever view is active.
-    Cleaning flags rows with a reason rather than deleting them — see the
-    <?= Html::a('cleaning funnel', ['/cleaning/index']) ?> and
-    <?= Html::a('preparation', ['/prepare/index']) ?>.
+    Every keyword you've imported, in one place. Use the tabs to follow it through the workflow, and
+    the filters (source, language, volume, competition) to narrow the list. Nothing is deleted —
+    removed keywords stay here, each with the reason why.
 </p>
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-    <div class="btn-group btn-group-sm" role="group" aria-label="Pipeline view">
+    <div class="btn-group btn-group-sm" role="group" aria-label="Keyword views">
         <?php foreach ($viewTabs as $key => [$label, $blurb]): ?>
             <?= Html::a(
                 $label . ' <span class="badge rounded-pill ' . ($currentView === $key ? 'text-bg-light' : 'text-bg-secondary') . '">' . (int) ($viewCounts[$key] ?? 0) . '</span>',
@@ -118,12 +116,19 @@ $total = (int) ($dataProvider->totalCount);
         ],
         [
             'attribute' => 'stage',
-            'filter' => false, // stage is chosen via the pipeline-view tabs above, not per-column
-            'headerOptions' => ['style' => 'width:110px'],
+            'label' => 'Status',
+            'filter' => false, // status is chosen via the view tabs above, not per-column
+            'headerOptions' => ['style' => 'width:120px'],
+            'value' => fn(Keyword $k): string => [
+                Keyword::STAGE_IMPORTED => 'Imported',
+                Keyword::STAGE_CLEANED => 'Cleaned',
+                Keyword::STAGE_PREPARED => 'In a campaign',
+                Keyword::STAGE_AD_READY => 'Ready for ads',
+            ][$k->stage] ?? $k->stage,
         ],
         [
             'attribute' => 'drop_reason',
-            'label' => 'Dropped — why',
+            'label' => 'Why removed',
             'value' => fn(Keyword $k): string => (string) ($k->drop_reason ?? '—'),
             'contentOptions' => ['class' => 'small text-muted'],
         ],

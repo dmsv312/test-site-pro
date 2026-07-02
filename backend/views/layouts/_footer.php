@@ -14,7 +14,7 @@ use yii\helpers\Html;
                 &copy; <?= Html::encode(Yii::$app->name) ?> <?= date('Y') ?>
             </div>
             <div class="col-md-6 text-center text-md-end small">
-                Keyword&nbsp;→&nbsp;Google&nbsp;Ads automation · test assignment
+                From keyword&nbsp;research to export-ready Google&nbsp;Ads campaigns
             </div>
         </div>
     </div>

@@ -18,8 +18,8 @@ final class AlreadyUsedRuleTest extends \Codeception\Test\Unit
 
     public function testFlagsExactUsedTerm(): void
     {
-        verify($this->rule->reason('website builder'))->stringContainsString('already used');
-        verify($this->rule->reason('free website'))->stringContainsString('already used');
+        verify($this->rule->reason('website builder'))->stringContainsString('advertised');
+        verify($this->rule->reason('free website'))->stringContainsString('advertised');
     }
 
     public function testExactMatchOnly(): void
@@ -39,6 +39,6 @@ final class AlreadyUsedRuleTest extends \Codeception\Test\Unit
     {
         $rule = new AlreadyUsedRule(['', 'free website']);
         verify($rule->reason(''))->null();
-        verify($rule->reason('free website'))->stringContainsString('already used');
+        verify($rule->reason('free website'))->stringContainsString('advertised');
     }
 }

@@ -7,7 +7,7 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var array<string, mixed> $summary */
 
-$this->title = 'Preparation & campaigns';
+$this->title = 'Campaigns';
 $this->params['breadcrumbs'][] = $this->title;
 
 $candidates = (int) $summary['candidates'];
@@ -16,40 +16,39 @@ $dropped = $summary['dropped'];
 $grouping = $summary['grouping'];
 /** @var array<string, mixed> $byLanguage */
 $byLanguage = $grouping['byLanguage'];
-$alreadyUsedReason = 'already used in Google Ads';
+$alreadyUsedReason = 'Already advertised in Google Ads';
 ?>
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
     <h1 class="mb-0"><?= Html::encode($this->title) ?></h1>
     <?= Html::beginForm(['run'], 'post') ?>
         <?= Html::submitButton(
-            $summary['hasRun'] ? 'Re-run preparation' : 'Run preparation',
+            $summary['hasRun'] ? 'Rebuild campaigns' : 'Build campaigns',
             ['class' => 'btn btn-primary', 'disabled' => $candidates === 0],
         ) ?>
     <?= Html::endForm() ?>
 </div>
 <p class="text-muted mt-2">
-    Preparation turns the cleaned keywords into a launch-ready set: it drops terms Site.pro
-    <strong>already runs</strong> in Google Ads (so only net-new keywords remain) and any
-    <?= Html::a('forbidden', ['/rules/index']) ?> term, keeps one canonical per duplicate group
-    (the highest-volume row — volume isn’t summed), then groups the survivors into one campaign per
-    language with themed ad groups. Re-running cleaning resets this stage.
+    Turn your cleaned keywords into export-ready Google Ads campaigns. This step removes keywords Site.pro
+    <strong>already advertises on</strong> (so you're left with fresh opportunities) and any
+    <?= Html::a('blocked', ['/rules/index']) ?> terms, then organizes the rest into one campaign per
+    language, with ad groups grouped by theme.
 </p>
 
 <?php if ($candidates === 0): ?>
     <div class="alert alert-warning">
         No cleaned keywords yet. Run <?= Html::a('cleaning', ['/cleaning/index']) ?> first, then
-        prepare.
+        come back here.
     </div>
 <?php elseif (!$summary['hasRun']): ?>
     <div class="alert alert-info">
-        <?= $candidates ?> cleaned keyword(s) ready — press “Run preparation” to build the campaigns.
+        <?= $candidates ?> cleaned keyword(s) ready — build your campaigns.
     </div>
 <?php endif; ?>
 
 <div class="row g-4">
     <div class="col-lg-7">
         <div class="card h-100">
-            <div class="card-header">Funnel</div>
+            <div class="card-header">Keywords at each step</div>
             <div class="card-body">
                 <?php foreach ($funnel as $i => $step): ?>
                     <?php
@@ -79,11 +78,11 @@ $alreadyUsedReason = 'already used in Google Ads';
 
                 <hr>
                 <div class="d-flex justify-content-between">
-                    <span class="text-muted">Prepared (net-new, campaign-ready)</span>
+                    <span class="text-muted">Ready for campaigns</span>
                     <strong class="text-success"><?= Yii::$app->formatter->asInteger($summary['prepared']) ?></strong>
                 </div>
                 <div class="d-flex justify-content-between">
-                    <span class="text-muted">Represent merged duplicate groups</span>
+                    <span class="text-muted">Merged from duplicates</span>
                     <strong><?= Yii::$app->formatter->asInteger($summary['mergedGroups']) ?></strong>
                 </div>
             </div>
@@ -92,11 +91,11 @@ $alreadyUsedReason = 'already used in Google Ads';
 
     <div class="col-lg-5">
         <div class="card h-100">
-            <div class="card-header">Dropped before campaigns</div>
+            <div class="card-header">Removed before campaigns</div>
             <div class="card-body">
                 <?php if ($dropped['total'] === 0): ?>
                     <p class="text-muted fst-italic mb-0">
-                        <?= $summary['hasRun'] ? 'Nothing dropped — every cleaned keyword is net-new.' : 'Nothing dropped yet.' ?>
+                        <?= $summary['hasRun'] ? 'Nothing removed — all your cleaned keywords are new.' : 'Nothing removed yet.' ?>
                     </p>
                 <?php else: ?>
                     <table class="table table-sm align-middle mb-0">
@@ -104,7 +103,7 @@ $alreadyUsedReason = 'already used in Google Ads';
                         <tr>
                             <td>
                                 <?= Html::a(
-                                    'Already used in Google Ads',
+                                    'Already advertised in Google Ads',
                                     ['/import/keywords', 'KeywordSearch' => ['drop_reason' => $alreadyUsedReason, 'view' => 'dropped']],
                                     ['class' => 'text-decoration-none'],
                                 ) ?>
@@ -112,7 +111,7 @@ $alreadyUsedReason = 'already used in Google Ads';
                             <td class="text-end"><span class="badge text-bg-secondary"><?= (int) $dropped['already_used'] ?></span></td>
                         </tr>
                         <tr>
-                            <td>Forbidden term</td>
+                            <td>Blocked term</td>
                             <td class="text-end"><span class="badge text-bg-secondary"><?= (int) $dropped['forbidden'] ?></span></td>
                         </tr>
                         </tbody>
@@ -135,7 +134,7 @@ $alreadyUsedReason = 'already used in Google Ads';
 </h2>
 
 <?php if ($byLanguage === []): ?>
-    <p class="text-muted fst-italic">No campaigns yet — run preparation to build them.</p>
+    <p class="text-muted fst-italic">No campaigns yet — build them above.</p>
 <?php else: ?>
     <div class="row g-3">
         <?php foreach ($byLanguage as $language => $data): ?>
@@ -147,7 +146,7 @@ $alreadyUsedReason = 'already used in Google Ads';
                     </div>
                     <div class="card-body">
                         <p class="small mb-3">
-                            Target URL:
+                            Landing page:
                             <?= Html::a(
                                 Html::encode($data['final_url']),
                                 $data['final_url'],

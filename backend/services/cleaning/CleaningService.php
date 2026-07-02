@@ -137,11 +137,11 @@ final class CleaningService
                     $updates[$canonicalId]['dedup_group_id'] = (string) $canonicalId;
                     foreach ($group['duplicates'] as $dupId) {
                         $updates[$dupId]['dedup_group_id'] = (string) $canonicalId;
-                        $updates[$dupId]['drop_reason'] = "duplicate of #{$canonicalId}";
+                        $updates[$dupId]['drop_reason'] = "Duplicate of #{$canonicalId}";
                     }
                 } else {
                     foreach ($group['duplicates'] as $dupId) {
-                        $updates[$dupId]['drop_reason'] = 'duplicate (group removed)';
+                        $updates[$dupId]['drop_reason'] = 'Duplicate';
                     }
                 }
             }
@@ -275,10 +275,10 @@ final class CleaningService
             'hasRun' => ($junk + $duplicate + $brand + $belowVolume) > 0,
             'funnel' => [
                 ['label' => 'Imported', 'remaining' => $total, 'dropped' => 0],
-                ['label' => 'After junk', 'remaining' => $afterJunk, 'dropped' => $junk],
-                ['label' => 'After dedup', 'remaining' => $afterDedup, 'dropped' => $duplicate],
-                ['label' => 'After brand', 'remaining' => $afterBrand, 'dropped' => $brand],
-                ['label' => 'Cleaned (after volume)', 'remaining' => $afterVolume, 'dropped' => $belowVolume],
+                ['label' => 'Kept after junk', 'remaining' => $afterJunk, 'dropped' => $junk],
+                ['label' => 'Kept after duplicates', 'remaining' => $afterDedup, 'dropped' => $duplicate],
+                ['label' => 'Kept after brand terms', 'remaining' => $afterBrand, 'dropped' => $brand],
+                ['label' => 'Kept for ads', 'remaining' => $afterVolume, 'dropped' => $belowVolume],
             ],
             'reasons' => $reasons,
         ];

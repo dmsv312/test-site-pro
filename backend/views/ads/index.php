@@ -8,7 +8,7 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var array<string, mixed> $summary */
 
-$this->title = 'Ad generation';
+$this->title = 'Ads';
 $this->params['breadcrumbs'][] = $this->title;
 
 $adGroups = (int) $summary['adGroups'];
@@ -30,27 +30,25 @@ $chip = static function (string $text, int $max): string {
     <h1 class="mb-0"><?= Html::encode($this->title) ?></h1>
     <?= Html::beginForm(['run'], 'post') ?>
         <?= Html::submitButton(
-            $summary['hasRun'] ? 'Re-generate ads' : 'Generate ads',
+            $summary['hasRun'] ? 'Recreate ads' : 'Create ads',
             ['class' => 'btn btn-primary', 'disabled' => $adGroups === 0],
         ) ?>
     <?= Html::endForm() ?>
 </div>
 <p class="text-muted mt-2">
-    Generation writes one responsive search ad per ad group — in the group’s language and pointing at
-    its localized target URL. Copy is preferred from stored, offline-authored content and falls back
-    to a deterministic template, so the demo host needs no AI credentials. Every ad is validated
-    against the RSA limits (≤<?= RsaValidator::HEADLINE_MAX ?>-char headlines,
-    ≤<?= RsaValidator::DESCRIPTION_MAX ?>-char descriptions) before it’s stored. Re-running
-    <?= Html::a('preparation', ['/prepare/index']) ?> rebuilds the ad groups and resets this stage.
+    Create one responsive search ad for each ad group, written in the group's language and pointing
+    to the right localized landing page. Every ad is checked against Google's length limits — up to
+    <?= RsaValidator::HEADLINE_MAX ?> characters per headline and
+    <?= RsaValidator::DESCRIPTION_MAX ?> per description — before it's saved.
 </p>
 
 <?php if ($adGroups === 0): ?>
     <div class="alert alert-warning">
-        No ad groups yet. Run <?= Html::a('preparation', ['/prepare/index']) ?> first, then generate ads.
+        No campaigns yet. <?= Html::a('Build your campaigns', ['/prepare/index']) ?> first, then create ads.
     </div>
 <?php elseif (!$summary['hasRun']): ?>
     <div class="alert alert-info">
-        <?= $adGroups ?> ad group(s) ready — press “Generate ads” to build the campaigns’ ads.
+        <?= $adGroups ?> ad group(s) ready — create their ads.
     </div>
 <?php endif; ?>
 
@@ -59,7 +57,7 @@ $chip = static function (string $text, int $max): string {
         <div class="col-6 col-lg-3">
             <div class="card h-100"><div class="card-body text-center">
                 <div class="display-6"><?= (int) $summary['generated'] ?></div>
-                <div class="text-muted small">ads generated<?= $summary['pending'] > 0 ? ' (' . (int) $summary['pending'] . ' pending)' : '' ?></div>
+                <div class="text-muted small">ads created<?= $summary['pending'] > 0 ? ' (' . (int) $summary['pending'] . ' pending)' : '' ?></div>
             </div></div>
         </div>
         <div class="col-6 col-lg-3">
@@ -71,13 +69,13 @@ $chip = static function (string $text, int $max): string {
         <div class="col-6 col-lg-3">
             <div class="card h-100"><div class="card-body text-center">
                 <div class="display-6"><?= (int) $summary['byStored'] ?> / <?= (int) $summary['byTemplate'] ?></div>
-                <div class="text-muted small">stored / template</div>
+                <div class="text-muted small">curated / template</div>
             </div></div>
         </div>
         <div class="col-6 col-lg-3">
             <div class="card h-100"><div class="card-body text-center">
                 <div class="display-6 <?= $summary['invalid'] > 0 ? 'text-danger' : 'text-success' ?>"><?= (int) $summary['invalid'] ?></div>
-                <div class="text-muted small">invalid</div>
+                <div class="text-muted small">need attention</div>
             </div></div>
         </div>
     </div>
@@ -105,14 +103,15 @@ $chip = static function (string $text, int $max): string {
                                     <span class="badge text-bg-secondary ms-1"><?= (int) $group->keyword_count ?> kw</span>
                                 </div>
                                 <?php if ($ad !== null): ?>
-                                    <span class="badge text-bg-<?= $ad->generated_by === app\models\GeneratedAd::BY_STORED ? 'primary' : 'light' ?>">
-                                        <?= Html::encode($ad->generated_by) ?>
+                                    <?php $isCurated = $ad->generated_by === app\models\GeneratedAd::BY_STORED; ?>
+                                    <span class="badge text-bg-<?= $isCurated ? 'primary' : 'light' ?>">
+                                        <?= $isCurated ? 'Curated' : 'Template' ?>
                                     </span>
                                 <?php endif; ?>
                             </div>
 
                             <?php if ($ad === null): ?>
-                                <p class="text-muted fst-italic small mb-0">No ad generated.</p>
+                                <p class="text-muted fst-italic small mb-0">No ad yet.</p>
                             <?php else: ?>
                                 <?php if (!$ad->is_valid): ?>
                                     <div class="alert alert-danger py-1 px-2 small"><?= Html::encode((string) $ad->note) ?></div>
@@ -140,7 +139,6 @@ $chip = static function (string $text, int $max): string {
 
 <?php if ($summary['hasRun']): ?>
     <p class="text-muted small mt-3 mb-0">
-        Next: <?= Html::a('export these campaigns', ['/export/index']) ?> as a Google Ads Editor CSV
-        (keywords + responsive search ads).
+        Next: <?= Html::a('export your campaigns', ['/export/index']) ?> for Google Ads.
     </p>
 <?php endif; ?>

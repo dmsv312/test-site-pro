@@ -8,7 +8,7 @@
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
 
-$this->title = 'Login to your account';
+$this->title = 'Sign in';
 $this->params['meta_description'] = 'Sign in to the Site.pro Keyword Manager admin area.';
 $htmlIcon = <<<HTML
 {label}<div class="input-group"><span class="input-group-text" aria-hidden="true">%s</span>{input}</div>{error}{hint}
@@ -28,8 +28,8 @@ $labelOptions = ['class' => 'form-label fw-semibold small'];
                             Keyword Manager
                         </h2>
                         <p class="opacity-75 mb-0 login-brand-text">
-                            Import keyword sources, clean them, and prepare Google Ads campaigns
-                            grouped by language.
+                            Turn keyword research into organized, export-ready Google Ads
+                            campaigns, grouped by language.
                         </p>
                     </div>
                 </div>
@@ -56,7 +56,7 @@ $labelOptions = ['class' => 'form-label fw-semibold small'];
                                 'placeholder' => 'username',
                                 'autofocus' => true,
                             ],
-                        ])->textInput()->label('Your Username', $labelOptions) ?>
+                        ])->textInput()->label('Username', $labelOptions) ?>
                     </div>
 
                     <div class="mb-3">
@@ -67,7 +67,7 @@ $labelOptions = ['class' => 'form-label fw-semibold small'];
                                 'class' => 'form-control',
                                 'placeholder' => 'Password',
                             ],
-                        ])->passwordInput()->label('Your Password', $labelOptions) ?>
+                        ])->passwordInput()->label('Password', $labelOptions) ?>
                     </div>
 
                     <div class="mb-4">
@@ -76,7 +76,7 @@ $labelOptions = ['class' => 'form-label fw-semibold small'];
 
                     <div class="d-grid">
                         <?= Html::submitButton(
-                            'Login',
+                            'Sign in',
                             [
                                 'class' => 'btn login-btn btn-lg rounded-3 text-white',
                                 'name' => 'login-button',
@@ -87,8 +87,7 @@ $labelOptions = ['class' => 'form-label fw-semibold small'];
                     <?php ActiveForm::end(); ?>
 
                     <div class="text-body-secondary text-center mt-3 small">
-                        Access is restricted. Credentials are configured in
-                        <code>.env</code> (<code>ADMIN_USERNAME</code> / <code>ADMIN_PASSWORD</code>).
+                        This area is restricted to authorized users.
                     </div>
 
                 </div>
