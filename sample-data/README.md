@@ -17,8 +17,11 @@ we don't have access to are **sample** values with realistic structure, noted be
 | `ahrefs_organic_keywords.csv` | Site.pro organic keywords | 136 | real volume/CPC; KD/position/traffic sample |
 | `ahrefs_paid_keywords.csv` | Competitors' paid keywords (Wix, Squarespace, Weebly, GoDaddy, Tilda) | 112 | real volume/CPC + competitor domain |
 
-JSON equivalents (to exercise the JSON importer): `json/ahrefs_paid_keywords.json`,
-`json/search_console_queries.json`.
+**JSON equivalents of all four sources** live in `json/` — same rows, same fields, native JSON
+types — so the JSON importer can be tested for every source, not just some:
+`json/google_ads_keywords.json`, `json/search_console_queries.json`,
+`json/ahrefs_organic_keywords.json`, `json/ahrefs_paid_keywords.json`. Pick the matching **Source**
+in the upload form (the format is detected from the `.csv` / `.json` extension).
 
 ## What the data intentionally contains
 

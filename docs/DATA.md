@@ -49,8 +49,8 @@ Where a source lacks a language/market column, language is inferred by detection
 
 ## The generated dataset (`sample-data/`)
 
-The four inputs are generated and committed under [`sample-data/`](../sample-data/) (with
-JSON variants under `sample-data/json/`) — ready to upload in the admin area:
+The four inputs are generated and committed under [`sample-data/`](../sample-data/) (with a
+JSON variant of **each** source under `sample-data/json/`) — ready to upload in the admin area:
 
 | File | Rows | Real / sample |
 |------|-----:|---------------|
