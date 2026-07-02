@@ -53,6 +53,22 @@
 
 ## Journal
 
+### 2026-07-02 — Fix: web file upload 500'd (TypeError on the typed `UploadForm::$file`)
+- **Symptom:** uploading a file in the admin (`POST /import/upload`) returned a 500. The log showed
+  `TypeError: Cannot assign string to property app\models\UploadForm::$file of type ?yii\web\UploadedFile`.
+- **Cause:** `Html::activeFileInput()` renders a **hidden empty `file` field**, so a real browser submit
+  carries `file=""` in the POST body (the actual file is in `$_FILES`). `Model::load()` then tried to
+  mass-assign that empty **string** to the **typed** `?UploadedFile` property → TypeError. (The console
+  import path was unaffected — it never goes through the form — which is why it kept working.)
+- **Fix:** `UploadForm::load()` now drops the `file` key before mass assignment; the file is bound from
+  `$_FILES` via `UploadedFile::getInstance()` in the controller as before. Kept the property typed.
+- **Regression test:** `UploadFormTest` — loading `['UploadForm' => ['source' => …, 'file' => '']]`
+  now succeeds and leaves `file` null (would have thrown before). Full suite **94 pass**, PHPStan 0,
+  PHPCS clean.
+- **Verified live** over the public URL with real multipart submits (hidden empty field + file part):
+  a valid CSV/JSON upload → 302 to the batch's keywords; a submit with **no file** → 302 back with a
+  validation flash (not a 500). Demo data restored to 378 → 126.
+
 ### 2026-07-02 — Dual export: added the Google Ads web-UI bulk-upload package (decision 34)
 - **Why:** a reviewer questioned whether the combined CSV imports into the Google Ads *web* interface.
   Researched Google's official docs (bulk-upload templates + Editor help), adversarially verified the

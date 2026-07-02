@@ -39,6 +39,27 @@ class UploadForm extends Model
         ];
     }
 
+    /**
+     * The uploaded file is bound from `$_FILES` via {@see \yii\web\UploadedFile::getInstance()}, never
+     * mass-assigned. `Html::activeFileInput()` renders a hidden empty `file` field, so a real browser
+     * submit carries `file=""` in the POST body; letting that empty string be assigned to the typed
+     * `?UploadedFile` property would throw a `TypeError`. So drop `file` from the data before the
+     * normal mass assignment — the controller sets it from `$_FILES` afterwards.
+     *
+     * @param array<string, mixed> $data
+     */
+    public function load($data, $formName = null): bool
+    {
+        $scope = $formName ?? $this->formName();
+        if ($scope === '') {
+            unset($data['file']);
+        } elseif (isset($data[$scope]) && is_array($data[$scope])) {
+            unset($data[$scope]['file']);
+        }
+
+        return parent::load($data, $formName);
+    }
+
     /** csv|json, derived from the uploaded file's extension. */
     public function format(): string
     {
