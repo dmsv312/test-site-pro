@@ -30,6 +30,27 @@ Admin login comes from `.env` (`ADMIN_USERNAME` / `ADMIN_PASSWORD`; defaults `ad
 Sign in, then **Import & data** → upload a CSV/JSON, and **Keywords** → browse everything
 imported. Stop with `docker compose down` (add `-v` to reset data).
 
+## Test it (for reviewers)
+
+Use the **live demo** (already populated, no setup) or a local run — the flow is the same.
+Everything the assignment asks to test — **upload, admin area, preview, export** — is on these pages.
+
+1. **Sign in** with the `.env` credentials (live demo credentials are provided with the submission).
+2. **Import & data** → **Clear all data** for a clean start, then upload each source file from
+   [`sample-data/`](sample-data/) (or its JSON twin in [`sample-data/json/`](sample-data/json/)),
+   picking the matching **Source** each time. → **378** keywords imported.
+   > Uploading *adds* a batch — it doesn't replace. For a clean re-run, hit **Clear all data** first
+   > (otherwise you'll see duplicated counts). Console shortcut for all four at once: `yii import/samples`.
+3. **Cleaning** → **Run** — junk · dedup · brand · volume, with a funnel explaining every drop. → **154** kept.
+4. **Prepare** → **Run** — drop already-used/forbidden · merge · group by language + theme.
+   → **107** prepared in **19** ad groups across **6** languages.
+5. **Ads** → **Run** — one responsive search ad per ad group, in its language. → **19** ads.
+6. **Export** → preview + two downloads:
+   - **Editor CSV** — a single file for the **Google Ads Editor** desktop app (Account → Import → From file). → **127** rows.
+   - **Bulk-upload ZIP** — one CSV per entity for the **web UI** (Tools → Bulk actions → Uploads); the bundled README gives the order.
+
+Sanity-check numbers end to end: **378 → 154 → 107 → 19 ad groups / 19 ads → Editor CSV 127 rows · bulk ZIP (4 sheets)**.
+
 ## What it does
 
 ```mermaid
