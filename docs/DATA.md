@@ -1,5 +1,7 @@
 # Data sources & schema
 
+> 🇷🇺 Русская версия: [`ru/DATA.md`](ru/DATA.md) (английский — источник правды).
+
 > What each source is, where its numbers come from, and the unified record everything is
 > normalized into. **Real vs sample is labeled per source** and never blurred.
 

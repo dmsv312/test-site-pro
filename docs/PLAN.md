@@ -1,5 +1,7 @@
 # Architecture & plan
 
+> 🇷🇺 Русская версия: [`ru/PLAN.md`](ru/PLAN.md) (английский — источник правды).
+
 > How the platform is built and why. Status lives in [`WORKLOG.md`](WORKLOG.md); data
 > details in [`DATA.md`](DATA.md); the original task in [`brief/TASK.md`](brief/TASK.md).
 
@@ -339,5 +341,7 @@ post-completion refinement.
 
 - Whether per-ad-group (per-theme) landing-URL overrides in the admin are worth adding, now that
   the per-language default (decision 15) is confirmed to be enough for the demo.
-- A richer ad-copy source later (a live Claude Code CLI call at build time, or more stored copy for
-  the non-English languages) — the `StoredAdSource`/`TemplateAdGenerator` seam already supports it.
+- Stored, hand-authored ad copy now covers **all six languages** (en/de/es/fr/it/pt), so the demo's
+  19 ads are all stored copy rather than template — every entry validated against `RsaValidator`.
+  A richer source later (a live Claude Code CLI call at build time, or per-theme variants) is still
+  open; the `StoredAdSource`/`TemplateAdGenerator` seam supports it and the template stays the fallback.

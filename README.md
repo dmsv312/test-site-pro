@@ -1,5 +1,7 @@
 # Site.pro — Marketing Automation (Keyword → Google Ads)
 
+> 🇷🇺 Russian mirror of the docs: [`docs/ru/`](docs/ru/README.md) (English is the source of truth).
+
 A dockerized Yii2 + PostgreSQL platform that ingests keyword data from several sources
 (Google Ads, Search Console, Ahrefs organic, and competitor paid keywords), cleans it,
 prepares Google Ads campaigns grouped by language, and exports them for **both** Google Ads

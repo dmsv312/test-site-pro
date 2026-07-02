@@ -1,135 +1,433 @@
 {
-  "_comment": "Offline-authored responsive-search-ad copy (stage 6, decision 3). Keyed by '{language}:{theme_key}'. Preferred by AdGenerationService when the entry passes RsaValidator; anything absent or invalid falls back to the deterministic template engine, so the deployed host needs no AI credentials. Authored locally with a Claude Code CLI. Headlines <=30 chars, descriptions <=90; the app re-validates before storing.",
-
-  "en:website": {
-    "headlines": [
-      "Build Your Website",
-      "Website Builder",
-      "Free Website Builder",
-      "Launch Your Website",
-      "Website in Minutes",
-      "No-Code Website",
-      "Mobile-Ready Website",
-      "Start Your Site Free",
-      "Pro Templates",
-      "Site.pro"
-    ],
-    "descriptions": [
-      "Build a professional website in minutes with Site.pro. No coding — start free today.",
-      "Drag-and-drop website builder, mobile-ready templates and hosting. Launch today.",
-      "Create, publish and grow your website. Hundreds of templates, free to start."
-    ],
-    "path1": "Website",
-    "path2": "Builder"
-  },
-
-  "en:builder": {
-    "headlines": [
-      "Website Builder",
-      "Free Website Builder",
-      "Drag-and-Drop Builder",
-      "Build Your Site",
-      "No-Code Builder",
-      "Site Builder Online",
-      "Launch in Minutes",
-      "Try It Free",
-      "Pro Templates",
-      "Site.pro Builder"
-    ],
-    "descriptions": [
-      "Build a website with an easy drag-and-drop builder. Templates, hosting, free to start.",
-      "Site.pro's website builder: no coding, mobile-ready templates, live in minutes.",
-      "Create a professional site with our builder. Publish today, no experience needed."
-    ],
-    "path1": "Website",
-    "path2": "Builder"
-  },
-
-  "en:free": {
-    "headlines": [
-      "Free Website Builder",
-      "Build a Site Free",
-      "Start for Free",
-      "Free Templates",
-      "No-Cost Website",
-      "Free Hosting Included",
-      "Launch Free Today",
-      "Website, Free to Start",
-      "Try Site.pro Free",
-      "Free & Easy"
-    ],
-    "descriptions": [
-      "Build your website free with Site.pro. Templates and hosting included — no coding.",
-      "Start a professional site at no cost. Drag-and-drop, mobile-ready, live in minutes.",
-      "Free website builder with hundreds of templates. Publish today, upgrade anytime."
-    ],
-    "path1": "Free",
-    "path2": "Website"
-  },
-
-  "en:business": {
-    "headlines": [
-      "Business Website",
-      "Build a Business Site",
-      "Website for Business",
-      "Grow Your Business",
-      "Pro Business Templates",
-      "Launch in Minutes",
-      "No-Code Website",
-      "Start Free Today",
-      "Mobile-Ready Site",
-      "Site.pro for Business"
-    ],
-    "descriptions": [
-      "Build a professional business website in minutes with Site.pro. No coding needed.",
-      "Templates for every business, hosting and mobile-ready design. Start free today.",
-      "Grow your business online with a modern website. Drag-and-drop, live in minutes."
-    ],
-    "path1": "Business",
-    "path2": "Website"
-  },
-
-  "en:web": {
-    "headlines": [
-      "Build Your Web Site",
-      "Web Design Made Easy",
-      "Free Web Builder",
-      "Your Website Online",
-      "No-Code Web Design",
-      "Web Templates",
-      "Launch on the Web",
-      "Start Free Today",
-      "Mobile-Ready Web",
-      "Site.pro"
-    ],
-    "descriptions": [
-      "Build your web presence in minutes with Site.pro. No coding — templates included.",
-      "Easy web design: drag-and-drop, mobile-ready templates and hosting. Start free.",
-      "Create and publish your website on the web today. Hundreds of templates, free."
-    ],
-    "path1": "Web",
-    "path2": "Design"
-  },
-
-  "en:general": {
-    "headlines": [
-      "Build Your Website",
-      "Free Website Builder",
-      "Launch in Minutes",
-      "No Coding Required",
-      "Drag-and-Drop Editor",
-      "Mobile-Ready Templates",
-      "Start Free Today",
-      "Go Online Fast",
-      "Pro Templates",
-      "Site.pro"
-    ],
-    "descriptions": [
-      "Create a professional website in minutes with Site.pro. No coding — start free.",
-      "Drag-and-drop builder, mobile-ready templates and hosting. Launch your site today.",
-      "Build, publish and grow your website with Site.pro. Free to start, easy to use."
-    ],
-    "path1": "Website",
-    "path2": "Builder"
-  }
+    "_comment": "Offline-authored responsive-search-ad copy (stage 6, decision 3), covering ALL six languages (en/de/es/fr/it/pt). Keyed by \"{language}:{theme_key}\". Preferred by AdGenerationService when the entry passes RsaValidator; anything absent or invalid falls back to the deterministic template engine, so the deployed host needs no AI credentials and makes no per-request call. Authored locally with a Claude Code CLI; each non-English entry adversarially reviewed for language + character limits. Headlines <=30 chars, descriptions <=90; the app re-validates before storing.",
+    "en:website": {
+        "headlines": [
+            "Build Your Website",
+            "Website Builder",
+            "Free Website Builder",
+            "Launch Your Website",
+            "Website in Minutes",
+            "No-Code Website",
+            "Mobile-Ready Website",
+            "Start Your Site Free",
+            "Pro Templates",
+            "Site.pro"
+        ],
+        "descriptions": [
+            "Build a professional website in minutes with Site.pro. No coding — start free today.",
+            "Drag-and-drop website builder, mobile-ready templates and hosting. Launch today.",
+            "Create, publish and grow your website. Hundreds of templates, free to start."
+        ],
+        "path1": "Website",
+        "path2": "Builder"
+    },
+    "en:builder": {
+        "headlines": [
+            "Website Builder",
+            "Free Website Builder",
+            "Drag-and-Drop Builder",
+            "Build Your Site",
+            "No-Code Builder",
+            "Site Builder Online",
+            "Launch in Minutes",
+            "Try It Free",
+            "Pro Templates",
+            "Site.pro Builder"
+        ],
+        "descriptions": [
+            "Build a website with an easy drag-and-drop builder. Templates, hosting, free to start.",
+            "Site.pro's website builder: no coding, mobile-ready templates, live in minutes.",
+            "Create a professional site with our builder. Publish today, no experience needed."
+        ],
+        "path1": "Website",
+        "path2": "Builder"
+    },
+    "en:free": {
+        "headlines": [
+            "Free Website Builder",
+            "Build a Site Free",
+            "Start for Free",
+            "Free Templates",
+            "No-Cost Website",
+            "Free Hosting Included",
+            "Launch Free Today",
+            "Website, Free to Start",
+            "Try Site.pro Free",
+            "Free & Easy"
+        ],
+        "descriptions": [
+            "Build your website free with Site.pro. Templates and hosting included — no coding.",
+            "Start a professional site at no cost. Drag-and-drop, mobile-ready, live in minutes.",
+            "Free website builder with hundreds of templates. Publish today, upgrade anytime."
+        ],
+        "path1": "Free",
+        "path2": "Website"
+    },
+    "en:business": {
+        "headlines": [
+            "Business Website",
+            "Build a Business Site",
+            "Website for Business",
+            "Grow Your Business",
+            "Pro Business Templates",
+            "Launch in Minutes",
+            "No-Code Website",
+            "Start Free Today",
+            "Mobile-Ready Site",
+            "Site.pro for Business"
+        ],
+        "descriptions": [
+            "Build a professional business website in minutes with Site.pro. No coding needed.",
+            "Templates for every business, hosting and mobile-ready design. Start free today.",
+            "Grow your business online with a modern website. Drag-and-drop, live in minutes."
+        ],
+        "path1": "Business",
+        "path2": "Website"
+    },
+    "en:web": {
+        "headlines": [
+            "Build Your Web Site",
+            "Web Design Made Easy",
+            "Free Web Builder",
+            "Your Website Online",
+            "No-Code Web Design",
+            "Web Templates",
+            "Launch on the Web",
+            "Start Free Today",
+            "Mobile-Ready Web",
+            "Site.pro"
+        ],
+        "descriptions": [
+            "Build your web presence in minutes with Site.pro. No coding — templates included.",
+            "Easy web design: drag-and-drop, mobile-ready templates and hosting. Start free.",
+            "Create and publish your website on the web today. Hundreds of templates, free."
+        ],
+        "path1": "Web",
+        "path2": "Design"
+    },
+    "en:general": {
+        "headlines": [
+            "Build Your Website",
+            "Free Website Builder",
+            "Launch in Minutes",
+            "No Coding Required",
+            "Drag-and-Drop Editor",
+            "Mobile-Ready Templates",
+            "Start Free Today",
+            "Go Online Fast",
+            "Pro Templates",
+            "Site.pro"
+        ],
+        "descriptions": [
+            "Create a professional website in minutes with Site.pro. No coding — start free.",
+            "Drag-and-drop builder, mobile-ready templates and hosting. Launch your site today.",
+            "Build, publish and grow your website with Site.pro. Free to start, easy to use."
+        ],
+        "path1": "Website",
+        "path2": "Builder"
+    },
+    "de:erstellen": {
+        "headlines": [
+            "Website erstellen",
+            "Homepage erstellen",
+            "Website einfach erstellen",
+            "Kostenlos Website erstellen",
+            "In Minuten erstellen",
+            "Ohne Programmierung",
+            "Baukasten für Webseiten",
+            "Mobile Vorlagen",
+            "Hosting inklusive",
+            "Site.pro Baukasten",
+            "Gratis starten",
+            "Profi-Vorlagen"
+        ],
+        "descriptions": [
+            "Erstellen Sie Ihre Website in Minuten mit Site.pro – gratis und ohne Programmierung.",
+            "Website per Drag-and-drop erstellen: mobile Vorlagen und Hosting inklusive.",
+            "Erstellen, veröffentlichen und wachsen Sie online. Hunderte Vorlagen, gratis starten.",
+            "Keine Programmierkenntnisse nötig. Website erstellen und sofort veröffentlichen."
+        ],
+        "path1": "Website",
+        "path2": "Erstellen"
+    },
+    "de:website": {
+        "headlines": [
+            "Website erstellen",
+            "Website-Baukasten",
+            "Gratis Website-Baukasten",
+            "Website online stellen",
+            "Website in Minuten",
+            "Website ohne Code",
+            "Mobile Website",
+            "Gratis starten",
+            "Profi-Vorlagen",
+            "Site.pro",
+            "Hosting inklusive",
+            "Webpräsenz aufbauen"
+        ],
+        "descriptions": [
+            "Erstellen Sie eine professionelle Website in Minuten mit Site.pro. Gratis starten.",
+            "Website-Baukasten mit mobilen Vorlagen und Hosting. Ohne Code, sofort online.",
+            "Bauen Sie Ihre Webpräsenz auf: Hunderte Vorlagen, kostenlos zum Start."
+        ],
+        "path1": "Website",
+        "path2": "Baukasten"
+    },
+    "de:general": {
+        "headlines": [
+            "Homepage-Baukasten",
+            "Website erstellen",
+            "Ohne Code starten",
+            "Mobile Vorlagen",
+            "Gratis starten",
+            "Profi-Vorlagen",
+            "Hosting inklusive",
+            "Site.pro Baukasten",
+            "In Minuten online",
+            "Einfach per Drag-and-drop",
+            "Webseite aufbauen",
+            "Kostenlos testen"
+        ],
+        "descriptions": [
+            "Der Website-Baukasten von Site.pro: Drag-and-drop, mobile Vorlagen, Hosting inklusive.",
+            "Erstellen Sie Ihre Website ohne Programmierung. Gratis starten, sofort online.",
+            "Hunderte professionelle Vorlagen, mobiloptimiert. Ohne Code, kostenlos zum Start."
+        ],
+        "path1": "Baukasten",
+        "path2": "Gratis"
+    },
+    "es:web": {
+        "headlines": [
+            "Crea tu página web",
+            "Creador de páginas web",
+            "Crea tu sitio web",
+            "Página web gratis",
+            "Sitio web sin código",
+            "Web lista para móvil",
+            "Plantillas profesionales",
+            "Empieza gratis hoy",
+            "Tu web en minutos",
+            "Hosting incluido",
+            "Sin conocimientos técnicos",
+            "Site.pro"
+        ],
+        "descriptions": [
+            "Crea tu página web profesional en minutos con Site.pro. Sin código y gratis.",
+            "Creador de sitios web con arrastrar y soltar, plantillas y hosting incluido.",
+            "Publica tu página web y hazla crecer. Cientos de plantillas, gratis al inicio.",
+            "Diseña un sitio web adaptado a móvil sin escribir código. Comienza gratis hoy."
+        ],
+        "path1": "PaginaWeb",
+        "path2": "SitioWeb"
+    },
+    "fr:site": {
+        "headlines": [
+            "Créez votre site web",
+            "Site web gratuit",
+            "Créateur de site web",
+            "Site web en 10 minutes",
+            "Modèles adaptés au mobile",
+            "Site web sans coder",
+            "Modèles professionnels",
+            "Hébergement inclus",
+            "Lancez votre site",
+            "Glisser-déposer",
+            "Site.pro",
+            "Commencez gratuitement"
+        ],
+        "descriptions": [
+            "Créez un site web professionnel en quelques minutes avec Site.pro. Sans coder, gratuit.",
+            "Créateur de site web par glisser-déposer, modèles adaptés au mobile et hébergement.",
+            "Créez, publiez et développez votre site. Des centaines de modèles, gratuit au départ."
+        ],
+        "path1": "Site",
+        "path2": "Web"
+    },
+    "fr:créer": {
+        "headlines": [
+            "Créer un site web",
+            "Créez votre site",
+            "Créer un site gratuit",
+            "Créez un site en minutes",
+            "Créateur de site web",
+            "Site web sans coder",
+            "Modèles professionnels",
+            "Modèles adaptés au mobile",
+            "Hébergement inclus",
+            "Glisser-déposer facile",
+            "Site.pro",
+            "Commencez gratuitement"
+        ],
+        "descriptions": [
+            "Créez votre site web professionnel avec Site.pro. Modèles prêts à l'emploi, sans coder.",
+            "Créer un site n'a jamais été aussi simple. Glisser-déposer et hébergement inclus.",
+            "Créez, publiez et développez votre site. Des centaines de modèles, gratuit au départ."
+        ],
+        "path1": "Site",
+        "path2": "Créer"
+    },
+    "fr:general": {
+        "headlines": [
+            "Créateur de site web",
+            "Créez votre site web",
+            "Site web gratuit",
+            "Sans coder, sans effort",
+            "Modèles professionnels",
+            "Modèles adaptés au mobile",
+            "Hébergement inclus",
+            "Lancez votre site",
+            "Site en quelques minutes",
+            "Publiez votre site",
+            "Site.pro",
+            "Commencez gratuitement"
+        ],
+        "descriptions": [
+            "Créez un site web professionnel avec Site.pro. Sans coder, gratuit au départ.",
+            "Glisser-déposer, modèles adaptés au mobile et hébergement. Lancez votre site.",
+            "Créez, publiez et développez votre site. Des centaines de modèles, gratuit."
+        ],
+        "path1": "Site",
+        "path2": "Web"
+    },
+    "it:gratis": {
+        "headlines": [
+            "Sito Web Gratis",
+            "Crea un Sito Gratis",
+            "Inizia Gratis Oggi",
+            "Site.pro",
+            "Crea il Tuo Sito Web",
+            "Modelli Pronti all'Uso",
+            "Nessun Codice",
+            "Hosting Incluso",
+            "Sito Pronto in Minuti",
+            "Modelli Responsive",
+            "Costruttore di Siti",
+            "Pubblica Gratis"
+        ],
+        "descriptions": [
+            "Crea un sito web professionale in pochi minuti con Site.pro. Inizia gratis oggi.",
+            "Costruttore drag-and-drop, modelli responsive e hosting. Pubblica il tuo sito oggi.",
+            "Crea, pubblica e fai crescere il tuo sito. Tanti modelli, gratis per iniziare.",
+            "Sito web gratuito con Site.pro: modelli, hosting e dominio. Online in pochi minuti."
+        ],
+        "path1": "Gratis",
+        "path2": "SitoWeb"
+    },
+    "it:online": {
+        "headlines": [
+            "Vai Online con Site.pro",
+            "Il Tuo Sito Online",
+            "Online in Pochi Minuti",
+            "Crea il Tuo Sito Web",
+            "Costruttore di Siti Web",
+            "Modelli Responsive",
+            "Nessun Codice",
+            "Hosting Incluso",
+            "Pubblica il Tuo Sito",
+            "Sito Web Professionale",
+            "Site.pro",
+            "Metti Online il Sito"
+        ],
+        "descriptions": [
+            "Porta la tua attività online con Site.pro. Sito pronto in minuti, senza codice.",
+            "Costruttore drag-and-drop e hosting incluso. Metti il tuo sito online oggi stesso.",
+            "Crea e pubblica il tuo sito online. Modelli responsive, gratis per iniziare.",
+            "Modelli responsive e ottimizzati per dispositivi mobili. Vai online con Site.pro."
+        ],
+        "path1": "Online",
+        "path2": "SitoWeb"
+    },
+    "it:general": {
+        "headlines": [
+            "Crea il Tuo Sito Web",
+            "Costruttore di Siti Web",
+            "Site.pro",
+            "Sito Web in Minuti",
+            "Nessun Codice Richiesto",
+            "Modelli Responsive",
+            "Hosting Incluso",
+            "Modelli Professionali",
+            "Pubblica il Tuo Sito",
+            "Inizia Gratis",
+            "Sito Web Professionale",
+            "Trascina e Rilascia"
+        ],
+        "descriptions": [
+            "Crea un sito web professionale con Site.pro. Nessun codice, inizia gratis oggi.",
+            "Costruttore drag-and-drop, modelli responsive e hosting. Pubblica il tuo sito oggi.",
+            "Crea, pubblica e fai crescere il tuo sito. Centinaia di modelli, gratis per iniziare.",
+            "Modelli pronti all'uso e ottimizzati per mobile. Il tuo sito online con Site.pro."
+        ],
+        "path1": "Crea",
+        "path2": "SitoWeb"
+    },
+    "pt:criar": {
+        "headlines": [
+            "Crie o Seu Site",
+            "Crie um Site Profissional",
+            "Criar Site é Fácil",
+            "Criador de Sites",
+            "Site em Minutos",
+            "Site sem Programação",
+            "Modelos Profissionais",
+            "Site Responsivo",
+            "Comece de Graça",
+            "Alojamento Incluído",
+            "Publique o Seu Site",
+            "Site.pro"
+        ],
+        "descriptions": [
+            "Crie um site profissional em minutos com o Site.pro. Sem código, grátis para começar.",
+            "Construtor de sites com arrastar e soltar, modelos responsivos e alojamento. Publique já.",
+            "Crie, publique e faça crescer o seu site. Centenas de modelos, grátis para começar."
+        ],
+        "path1": "Criar",
+        "path2": "Site"
+    },
+    "pt:gratuito": {
+        "headlines": [
+            "Site Grátis para Começar",
+            "Crie o Seu Site Grátis",
+            "Comece Grátis Hoje",
+            "Criador de Sites Grátis",
+            "Site sem Custos",
+            "Site em Minutos",
+            "Modelos Profissionais",
+            "Site Responsivo",
+            "Sem Programação",
+            "Publique de Graça",
+            "Alojamento Incluído",
+            "Site.pro"
+        ],
+        "descriptions": [
+            "Crie o seu site grátis com o Site.pro. Sem programação e sem custos para começar.",
+            "Construtor de sites grátis: arrastar e soltar, modelos responsivos e alojamento.",
+            "Comece grátis e publique o seu site em minutos. Centenas de modelos profissionais."
+        ],
+        "path1": "Site",
+        "path2": "Grátis"
+    },
+    "pt:general": {
+        "headlines": [
+            "Criador de Sites",
+            "Crie o Seu Site",
+            "Site em Minutos",
+            "Site sem Programação",
+            "Modelos Profissionais",
+            "Site Responsivo",
+            "Comece Grátis Hoje",
+            "Alojamento Incluído",
+            "Arrastar e Soltar",
+            "Publique o Seu Site",
+            "Modelos Responsivos",
+            "Site.pro"
+        ],
+        "descriptions": [
+            "Construa um site profissional com o Site.pro. Sem código e grátis para começar.",
+            "Construtor de sites com arrastar e soltar, modelos responsivos e alojamento.",
+            "Crie, publique e faça crescer o seu site. Centenas de modelos profissionais."
+        ],
+        "path1": "Criador",
+        "path2": "Sites"
+    }
 }

@@ -1,6 +1,9 @@
 # Import / export contracts
 
-> Status: **import + cleaning + preparation + ad generation + export implemented (stages 3–7).**
+> 🇷🇺 Русская версия: [`ru/API.md`](ru/API.md) (английский — источник правды).
+
+> Status: **import → cleaning → preparation → ad generation → export are all implemented**, with
+> **two** Google Ads export formats (Editor desktop CSV + web-UI bulk-upload ZIP, decision 34).
 > The assignment says "later we will use API", so import is built contract-first behind adapters.
 > See `docs/PLAN.md` for how it fits the architecture, and `docs/DATA.md` for field meanings.
 
@@ -78,14 +81,10 @@ yii export/bulk [path]            write the Google Ads web-UI bulk-upload ZIP (d
 Ads / Ahrefs, a live reader replaces a sample file there and the adapters + pipeline stay
 untouched. Not implemented yet.
 
-Accepted input columns per source and the normalized target fields are documented in
-`docs/DATA.md`.
-
-### External API (future)
-
 The same adapter interface will back a fetcher for Google Search Console, the Google Ads
 account, and Ahrefs once credentials are provided by Site.pro. Until then those sources are
-imported as clearly-labeled sample files.
+imported as clearly-labeled sample files. Accepted input columns per source and the normalized
+target fields are documented in `docs/DATA.md`.
 
 ## Export — implemented
 

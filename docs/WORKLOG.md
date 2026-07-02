@@ -1,5 +1,7 @@
 # Work log
 
+> 🇷🇺 Русская версия: [`ru/WORKLOG.md`](ru/WORKLOG.md) (английский — источник правды).
+
 > Single source of truth for status. Newest entries on top. Every build stage lands here.
 
 ## Current status
@@ -22,8 +24,8 @@
   `X-Frame-Options: DENY`, `Referrer-Policy`. PHPStan / PHPCS / 83 unit tests still green;
   pipeline data intact (107 keywords / 19 ads / 6 campaigns / 19 ad groups). **The project is
   now stage 9/9 — all planned stages done.**
-- **Next:** none planned. Optional refinements only (hand-authored ad copy for the five
-  non-English languages; per-ad-group URL overrides; a smarter theme clusterer).
+- **Next:** none planned. Optional refinements only (per-ad-group URL overrides; a smarter
+  theme clusterer).
 - **Live:** https://sitepro.dm312sv.online · local http://127.0.0.1:8100 (admin login from `.env`)
 
 - **Prev:** stage 7 — campaign preview + **Google Ads Editor CSV export**. A single combined,
@@ -52,6 +54,24 @@
 | 9 | Deploy hardening + smoke | ✅ done |
 
 ## Journal
+
+### 2026-07-02 — Stored ad copy now covers all six languages (was English-only)
+- **Why:** every ad group already got an ad, but only the six English groups used hand-authored
+  stored copy; the 13 non-English groups (de/es/fr/it/pt) fell back to the deterministic template
+  engine. The copy is in each group's language either way, but template copy is generic.
+- **What:** wrote native responsive-search-ad copy for all 13 non-English theme groups
+  (de: erstellen/website/general · es: web · fr: site/créer/general · it: gratis/online/general ·
+  pt: criar/gratuito/general) and added them to `sample-data/generated-ads.json`, keyed by
+  `language:theme_key`. Each entry: 12 headlines + 3–4 descriptions + display paths, in the group's
+  language, weaving the group's theme, mentioning the brand.
+- **How verified:** each language was drafted by a native-copywriter pass and an adversarial
+  reviewer pass (character limits, language correctness, register, diacritics — which caught two
+  path spellings: `Creer`→`Créer`, `Gratis`→`Grátis`). Then the **authoritative gate**: every one
+  of the 19 entries was run through the real `RsaValidator` — all pass (headlines ≤27, descriptions
+  ≤89, within Google's 30/90 ceilings). Regenerated: **19/19 ads now `stored`, 0 template, 0
+  invalid**; export unchanged at 126 rows; **94 unit tests** green. Spot-checked the live export and
+  `/ads` — real localized copy is present (`Créez votre site web`, `Site Grátis`, `Kostenloser
+  Baukasten`, `Crie o Seu Site`). The template engine remains the always-available fallback.
 
 ### 2026-07-02 — Fix: web file upload 500'd (TypeError on the typed `UploadForm::$file`)
 - **Symptom:** uploading a file in the admin (`POST /import/upload`) returned a 500. The log showed

@@ -7,8 +7,10 @@ namespace app\services\adgen;
 /**
  * Deterministic, offline ad generator: builds a valid responsive search ad for an ad group from
  * localized building blocks, with no external call and no AI credentials. It is the always-available
- * fallback behind {@see AdGenerationService} (stored offline-authored copy is preferred when present),
- * and it is what the public demo host runs.
+ * fallback behind {@see AdGenerationService} (stored offline-authored copy is preferred when present).
+ * Stored copy now covers all six demo languages, so this engine is the safety net rather than what the
+ * demo actually renders — but it must stay correct, since any missing or invalid stored entry falls
+ * back to it.
  *
  * For each ad group it weaves the group's own theme (the dominant keyword token) into a couple of
  * headlines, then fills from a per-language pool of website-builder value propositions — so every ad
