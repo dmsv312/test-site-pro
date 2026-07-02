@@ -4,6 +4,15 @@
 
 ## Current status
 
+- **Done (refinement):** **dual Google Ads export** — the existing Editor (desktop) CSV **plus** a new
+  web-UI bulk-upload ZIP, after researching Google's two import paths against official docs (decision
+  34). The web tool has no combined format, so the ZIP holds one CSV per entity (campaigns → ad groups
+  → keywords → responsive search ads, dependency order + a README), with headers verbatim from
+  Google's bulk-upload templates and campaigns emitted **paused, Manual CPC, no budget**. New pure
+  `GoogleAdsBulkUploadExport` + a shared `CsvWriter`; `/export/download-bulk` and `yii export/bulk`;
+  the `/export` preview now presents both artifacts with import instructions (and the stale "Ad Type"
+  layout note is fixed). Verified live over the public URL (Editor CSV 127 lines; ZIP valid, 5 files);
+  **91 unit tests** (was 83), PHPStan 0 / PHPCS clean.
 - **Done:** stage 9 — **deploy hardening + end-to-end smoke over the public URL**. A 15-check
   live smoke passes against https://sitepro.dm312sv.online (guest gate → CSRF login → all seven
   admin pages 200 → `text/csv` export download → error page leaks no stack trace). Hardening:
@@ -43,6 +52,38 @@
 | 9 | Deploy hardening + smoke | ✅ done |
 
 ## Journal
+
+### 2026-07-02 — Dual export: added the Google Ads web-UI bulk-upload package (decision 34)
+- **Why:** a reviewer questioned whether the combined CSV imports into the Google Ads *web* interface.
+  Researched Google's official docs (bulk-upload templates + Editor help), adversarially verified the
+  claims: the CSV **is** correct but it targets the **desktop Google Ads Editor**; the **web UI** has a
+  separate bulk-upload format — and **no combined single sheet** (every official web template is
+  single-entity). So we keep the Editor file and add a second, web-native artifact.
+- **New pure formatter `GoogleAdsBulkUploadExport`** — per-entity headers **verbatim from Google's
+  templates**, with the details that differ from Editor: an `Action`=`Add` column, per-entity status
+  columns (`Campaign status`/`Status`/`Ad status`), match type spelled **`Phrase match`**, an explicit
+  **`Ad type`=`Responsive search ad`**, and a first description column named just **`Description`**
+  (then `Description 2..4`). Campaigns are emitted **paused, on `Manual CPC`, with no budget column**
+  so an accidental import can't spend; ads paused too. `Final URL` is always the ad group's URL.
+- **Shared `CsvWriter`** — the RFC-4180/CRLF/UTF-8 renderer was extracted from `GoogleAdsEditorExport`
+  so both formats use one implementation (Editor render now delegates to it; behaviour-preserving).
+- **`ExportService`** gained `bulkSheets()` (four ordered named sheets) and `toBulkZip()` (a ZIP of the
+  four CSVs + a `README.txt` giving the upload order and the paused/no-budget caveats). Web download at
+  **`/export/download-bulk`**, console **`yii export/bulk [path]`**. Keyword text is sanitized and
+  deduped per ad group exactly as in the Editor export.
+- **`/export` preview overhauled:** two clearly-labeled cards — *Google Ads Editor (desktop): Account →
+  Import → From file* and *Google Ads web UI: Tools → Bulk actions → Uploads* — each with a one-line
+  what-it-is, import steps, and a download button. Fixed the stale "Ad Type" note in the Editor layout
+  line (that column was removed in decision 29).
+- **Verified:** console `export/bulk` → ZIP with `campaigns.csv` (6) / `ad-groups.csv` (19) /
+  `keywords.csv` (107) / `responsive-search-ads.csv` (19) + README; spot-checked every sheet's header
+  and a row (Phrase match, Ad type, unnumbered `Description`, UTF-8 `Site.pro — DE` / `Erstellen`).
+  Live over the public URL: `/export` renders both cards (200), `/export/download` streams the Editor
+  CSV (127 lines), `/export/download-bulk` streams a valid ZIP (5 files). **91 unit tests** (8 new),
+  PHPStan 0 errors, PHPCS clean.
+- **Honestly not verified** (documented, not overclaimed): whether the web UI would also accept the
+  Editor CSV directly (Google's docs are silent), and server-side validation beyond the published
+  template columns.
 
 ### 2026-07-02 — Stage 9: deploy hardening + end-to-end smoke over the public URL
 - **Live smoke (15 checks, all pass)** against https://sitepro.dm312sv.online, driving the real

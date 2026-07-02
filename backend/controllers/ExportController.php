@@ -12,9 +12,10 @@ use yii\web\Controller;
 use yii\web\Response;
 
 /**
- * Admin area (login-gated): stage 7 — campaign preview and Google Ads Editor CSV download. Thin
- * controller; the preview numbers and the CSV both come from {@see ExportService}. The download is a
- * read-only GET (a file the operator clicks to save), so it has no CSRF form; access is still gated.
+ * Admin area (login-gated): stage 7 — campaign preview and two downloads. Thin controller; the
+ * preview numbers and both artifacts come from {@see ExportService}. `download` streams the single
+ * Google Ads Editor (desktop) CSV; `download-bulk` streams the Google Ads web-UI bulk-upload ZIP.
+ * Both are read-only GETs (files the operator clicks to save), so no CSRF form; access is still gated.
  */
 class ExportController extends Controller
 {
@@ -51,8 +52,38 @@ class ExportController extends Controller
 
         return Yii::$app->response->sendContentAsFile(
             GoogleAdsEditorExport::render($rows),
-            'google-ads-editor-' . date('Ymd') . '.csv',
+            'google-ads-editor-import-' . date('Ymd') . '.csv',
             ['mimeType' => 'text/csv', 'inline' => false],
+        );
+    }
+
+    /**
+     * Stream the Google Ads **web-UI** bulk-upload package (a ZIP of one CSV per entity —
+     * campaigns / ad groups / keywords / ads — plus a README), or bounce back if there's nothing yet.
+     */
+    public function actionDownloadBulk(): Response
+    {
+        $service = new ExportService();
+        if ((int) ExportService::snapshot()['adRows'] === 0) {
+            Yii::$app->session->setFlash(
+                'warning',
+                'Nothing to export yet — run preparation and ad generation first.',
+            );
+
+            return $this->redirect(['index']);
+        }
+
+        $zip = $service->toBulkZip();
+        if ($zip === '') {
+            Yii::$app->session->setFlash('error', 'Could not build the bulk-upload archive.');
+
+            return $this->redirect(['index']);
+        }
+
+        return Yii::$app->response->sendContentAsFile(
+            $zip,
+            'google-ads-bulk-upload-' . date('Ymd') . '.zip',
+            ['mimeType' => 'application/zip', 'inline' => false],
         );
     }
 }

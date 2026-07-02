@@ -15,22 +15,63 @@ $ready = (bool) $summary['ready'];
 /** @var array<string, mixed> $byLanguage */
 $byLanguage = $summary['byLanguage'];
 ?>
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-    <h1 class="mb-0"><?= Html::encode($this->title) ?></h1>
-    <?= Html::a(
-        'Download Google Ads Editor CSV',
-        ['download'],
-        ['class' => 'btn btn-primary' . ($ready ? '' : ' disabled'), 'aria-disabled' => $ready ? null : 'true'],
-    ) ?>
-</div>
+<h1 class="mb-0"><?= Html::encode($this->title) ?></h1>
 <p class="text-muted mt-2">
-    The export is a single <strong>Google Ads Editor</strong>-compatible CSV that recreates the whole
-    campaign tree: one campaign per language, its themed ad groups, every prepared keyword (match type
-    <strong><?= Html::encode((string) $summary['matchType']) ?></strong>), and one responsive search ad
-    per ad group — each pointing at its verified localized target URL. Like the rest of the pipeline the
-    file is derived on demand from the current state, so it always reflects the latest
-    <?= Html::a('preparation', ['/prepare/index']) ?> and <?= Html::a('ad generation', ['/ads/index']) ?>.
+    Both artifacts recreate the same campaign tree — one campaign per language, its themed ad groups,
+    every prepared keyword (match type <strong><?= Html::encode((string) $summary['matchType']) ?></strong>),
+    and one responsive search ad per ad group, each pointing at its verified localized target URL. Like
+    the rest of the pipeline they are derived on demand from the current state, so they always reflect
+    the latest <?= Html::a('preparation', ['/prepare/index']) ?> and
+    <?= Html::a('ad generation', ['/ads/index']) ?>. Google Ads has <strong>two</strong> import paths and
+    they use different file formats — pick the one matching the tool you'll use.
 </p>
+
+<div class="row g-3 mt-1">
+    <div class="col-md-6">
+        <div class="card h-100 border-primary-subtle">
+            <div class="card-body d-flex flex-column">
+                <h2 class="h5 card-title">Google Ads Editor <span class="text-muted fw-normal">(desktop app)</span></h2>
+                <p class="card-text small mb-2">
+                    A single combined <code>.csv</code> — keywords and ads in one file, the entity type
+                    inferred from the columns each row fills. This is the desktop Editor's format.
+                </p>
+                <p class="card-text small text-muted mb-3">
+                    Import: <strong>Account → Import → From file</strong>, then review and post.
+                </p>
+                <div class="mt-auto">
+                    <?= Html::a(
+                        'Download Editor CSV',
+                        ['download'],
+                        ['class' => 'btn btn-primary' . ($ready ? '' : ' disabled'), 'aria-disabled' => $ready ? null : 'true'],
+                    ) ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body d-flex flex-column">
+                <h2 class="h5 card-title">Google Ads web UI <span class="text-muted fw-normal">(browser)</span></h2>
+                <p class="card-text small mb-2">
+                    A <code>.zip</code> of one sheet per entity — campaigns, ad groups, keywords, ads —
+                    because the web tool has no combined format. Campaigns import <strong>paused,
+                    without a budget</strong> (set one before enabling).
+                </p>
+                <p class="card-text small text-muted mb-3">
+                    Import: <strong>Tools → Bulk actions → Uploads</strong>, one sheet at a time, in the
+                    order in the bundled README.
+                </p>
+                <div class="mt-auto">
+                    <?= Html::a(
+                        'Download bulk-upload ZIP',
+                        ['download-bulk'],
+                        ['class' => 'btn btn-outline-primary' . ($ready ? '' : ' disabled'), 'aria-disabled' => $ready ? null : 'true'],
+                    ) ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php if ($summary['adGroups'] === 0): ?>
     <div class="alert alert-warning">
@@ -81,12 +122,13 @@ $byLanguage = $summary['byLanguage'];
 <?php endif; ?>
 
 <p class="text-muted small">
-    File layout — one row per entity, columns filled by type:
+    Editor CSV layout — one row per entity, columns filled by type:
     <span class="badge text-bg-light border">keyword row</span>
     <code>Campaign · Ad Group · Keyword · Match Type · Final URL</code> ·
     <span class="badge text-bg-light border">ad row</span>
-    <code>Campaign · Ad Group · Ad Type · Headline 1…<?= GoogleAdsEditorExport::MAX_HEADLINES ?>
-        · Description 1…<?= GoogleAdsEditorExport::MAX_DESCRIPTIONS ?> · Path 1/2 · Final URL</code>.
+    <code>Campaign · Ad Group · Headline 1…<?= GoogleAdsEditorExport::MAX_HEADLINES ?>
+        · Description 1…<?= GoogleAdsEditorExport::MAX_DESCRIPTIONS ?> · Path 1/2 · Final URL</code>
+    (Editor infers the responsive search ad from the headline/description columns — no ad-type column).
     UTF-8, RFC-4180 quoting.
 </p>
 
@@ -155,11 +197,16 @@ $byLanguage = $summary['byLanguage'];
 <?php endforeach; ?>
 
 <?php if ($ready): ?>
-    <p class="mt-4">
+    <div class="d-flex flex-wrap gap-2 mt-4">
         <?= Html::a(
-            'Download Google Ads Editor CSV (' . (int) $summary['totalRows'] . ' rows) →',
+            'Download Editor CSV (' . (int) $summary['totalRows'] . ' rows) →',
             ['download'],
             ['class' => 'btn btn-outline-success'],
         ) ?>
-    </p>
+        <?= Html::a(
+            'Download bulk-upload ZIP (4 sheets) →',
+            ['download-bulk'],
+            ['class' => 'btn btn-outline-success'],
+        ) ?>
+    </div>
 <?php endif; ?>

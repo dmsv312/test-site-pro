@@ -15,6 +15,7 @@ use yii\helpers\Console;
  * the logic is decoupled from the web layer.
  *
  *   yii export/file [path]     write the Google Ads Editor CSV (default: @runtime/export/…)
+ *   yii export/bulk [path]     write the Google Ads web-UI bulk-upload ZIP (default: @runtime/export/…)
  */
 class ExportController extends Controller
 {
@@ -60,6 +61,43 @@ class ExportController extends Controller
                 (int) $summary['groupsWithoutAd'],
             ), Console::FG_YELLOW);
         }
+
+        return ExitCode::OK;
+    }
+
+    /** Write the Google Ads web-UI bulk-upload ZIP (one CSV per entity + README) and print a summary. */
+    public function actionBulk(?string $path = null): int
+    {
+        $summary = ExportService::snapshot();
+        if ((int) $summary['adRows'] === 0) {
+            $this->stderr("Nothing to export: no valid ads. Run `prepare/run` then `adgen/run` first.\n", Console::FG_RED);
+
+            return ExitCode::UNAVAILABLE;
+        }
+
+        $path ??= Yii::getAlias('@runtime/export/google-ads-bulk-upload-' . date('Ymd') . '.zip');
+        $dir = dirname($path);
+        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+            $this->stderr("Cannot create directory: {$dir}\n", Console::FG_RED);
+
+            return ExitCode::CANTCREAT;
+        }
+
+        $service = new ExportService();
+        $zip = $service->toBulkZip();
+        if ($zip === '' || file_put_contents($path, $zip) === false) {
+            $this->stderr("Cannot write archive: {$path}\n", Console::FG_RED);
+
+            return ExitCode::IOERR;
+        }
+
+        $this->stdout("Bulk export done.\n", Console::FG_GREEN);
+        $this->stdout(sprintf("  File: %s (%s bytes)\n", $path, number_format(strlen($zip))));
+        $this->stdout("  Sheets (upload in order via Tools > Bulk actions > Uploads):\n");
+        foreach ($service->bulkSheets() as $sheet) {
+            $this->stdout(sprintf("    %-26s %d row(s)\n", $sheet['filename'], count($sheet['rows'])));
+        }
+        $this->stdout("  Campaigns import PAUSED with no budget — set a budget and enable before serving.\n", Console::FG_YELLOW);
 
         return ExitCode::OK;
     }

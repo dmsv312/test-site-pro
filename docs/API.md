@@ -41,9 +41,10 @@ GET  /prepare/index     preparation funnel + campaign preview (languages → ad 
 POST /prepare/run       drop already-used/forbidden → keep canonicals → group by language + theme
 GET  /ads/index         generated-ads preview (per language → ad groups → RSA copy + char counts)
 POST /ads/run           (re)generate one responsive search ad per ad group
-GET  /export/index      export preview (campaigns → ad groups, counts, what the file will contain)
-GET  /export/download   download the Google Ads Editor CSV (keywords + RSA ads)
-GET  /rules/index       editable thresholds + brand / forbidden term lists
+GET  /export/index         export preview (campaigns → ad groups, counts, both artifacts)
+GET  /export/download      download the Google Ads Editor (desktop) CSV (keywords + RSA ads)
+GET  /export/download-bulk download the Google Ads web-UI bulk-upload ZIP (one CSV per entity)
+GET  /rules/index          editable thresholds + brand / forbidden term lists
 ```
 
 Ad generation (`/ads/run`) writes one responsive search ad per ad group: it prefers stored,
@@ -67,7 +68,8 @@ yii import/file <source> <path>   import one CSV/JSON file
 yii clean/run                     run the cleaning pipeline (resets stages 5–6; then run prepare + adgen)
 yii prepare/run                   run preparation: drops → merge → group by language + theme (resets stage 6)
 yii adgen/run                     generate one RSA per ad group (stored copy preferred, template fallback)
-yii export/file [path]            write the Google Ads Editor CSV (default: @runtime/export/…)
+yii export/file [path]            write the Google Ads Editor (desktop) CSV (default: @runtime/export/…)
+yii export/bulk [path]            write the Google Ads web-UI bulk-upload ZIP (default: @runtime/export/…)
 ```
 
 ### External API (future)
@@ -87,14 +89,24 @@ imported as clearly-labeled sample files.
 
 ## Export — implemented
 
+Google Ads has **two** import paths that take **different file formats**, so the app offers both
+(decision 34). Both are **derived on demand** from the current `ad_group` / `generated_ad` /
+`keyword` state (decision 31), so they always reflect the latest preparation and generation, and both
+sanitize keyword text at the boundary and write only ads flagged `is_valid`. RFC-4180 formatting
+(comma-separated, `"`-quoted with doubled inner quotes, CRLF), UTF-8 without a BOM, lives in one
+shared `CsvWriter`.
+
 ```
-GET /export/index      HTML preview of the campaigns (counts + what the file will contain)
-GET /export/download   the Google Ads Editor CSV as an attachment (google-ads-editor-<date>.csv)
+GET /export/index         HTML preview of the campaigns + both download options
+GET /export/download       Google Ads Editor (desktop) CSV     (google-ads-editor-import-<date>.csv)
+GET /export/download-bulk  Google Ads web-UI bulk-upload ZIP   (google-ads-bulk-upload-<date>.zip)
 ```
 
-The export is **one combined Google Ads Editor**-compatible CSV (decision 29) — a single sheet that
-recreates the whole tree on import. Every row names its `Campaign` (+ `Campaign Type` = Search) and
-`Ad Group`; the row's *type* is read from which columns it fills:
+### A. Google Ads Editor (desktop) — one combined CSV (decision 29)
+
+A single sheet recreates the whole tree on import (Account → Import → From file). Every row names its
+`Campaign` (+ `Campaign Type` = Search) and `Ad Group`; the row's *type* is read from which columns
+it fills:
 
 | Row type | Filled columns |
 |----------|----------------|
@@ -103,15 +115,20 @@ recreates the whole tree on import. Every row names its `Campaign` (+ `Campaign 
 
 Editor recognizes the ad as an RSA from the headline/description columns — its CSV schema has **no
 ad-type column**, so none is emitted. `Final URL` is the ad group's verified localized target URL —
-never taken from any generated text. `Max CPC` is left blank (the advertiser sets bids). Only ads
-flagged `is_valid` are written; an ad group without a valid ad still exports its keywords and is
-flagged in the preview. Output is RFC-4180 (comma-separated, `"`-quoted with doubled inner quotes,
-CRLF line endings), UTF-8 without a BOM — verified to import into Google Ads Editor. Like the rest of
-the pipeline the file is **derived on demand** from the current state (decision 31), so it always
-reflects the latest preparation and generation.
+never taken from any generated text. `Max CPC` is left blank. New campaigns import as **stubs that
+still need a budget and bid strategy** in Editor before they can be posted.
 
-New campaigns import as **stubs that still need a budget and bid strategy** in Editor before they can
-be posted — the export is keywords + ads, not campaign settings.
+### B. Google Ads web UI — bulk-upload ZIP (decision 34)
+
+The web tool (Tools → Bulk actions → Uploads) has **no combined format** — every official template is
+single-entity — so the ZIP holds **one CSV per entity**, uploaded in dependency order (a bundled
+`README.txt` states it): `campaigns.csv` → `ad-groups.csv` → `keywords.csv` →
+`responsive-search-ads.csv`. Column headers are verbatim from Google's official bulk-upload templates,
+with details that differ from Editor: an `Action` = `Add` column, per-entity status columns
+(`Campaign status` / `Status` / `Ad status`), match type spelled **`Phrase match`**, an explicit
+`Ad type` = `Responsive search ad`, and a first description column named just **`Description`** (then
+`Description 2..4`). Campaigns import **paused, on `Manual CPC`, with no budget column**, so an
+accidental import never spends — set a budget and enable before serving.
 
 ## Normalized keyword record
 

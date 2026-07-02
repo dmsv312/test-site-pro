@@ -2,8 +2,9 @@
 
 A dockerized Yii2 + PostgreSQL platform that ingests keyword data from several sources
 (Google Ads, Search Console, Ahrefs organic, and competitor paid keywords), cleans it,
-prepares Google Ads campaigns grouped by language, and exports a **Google Ads Editor**
-import file. Built with AI-assisted coding (#vibecoding).
+prepares Google Ads campaigns grouped by language, and exports them for **both** Google Ads
+import paths — a **Google Ads Editor** (desktop) CSV and a **web-UI bulk-upload** ZIP. Built
+with AI-assisted coding (#vibecoding).
 
 > **Status:** work in progress. See [`docs/WORKLOG.md`](docs/WORKLOG.md) for what's done and
 > what's next.
@@ -38,7 +39,7 @@ flowchart LR
   K --> C[Clean<br/>junk · dedup · brand · volume]
   C --> P[Prepare<br/>drop used/forbidden<br/>merge · group by language]
   P --> A[Generate ads<br/>per language · correct URL]
-  A --> E[Preview + export<br/>Google Ads Editor CSV]
+  A --> E[Preview + export<br/>Editor CSV + web-UI ZIP]
 ```
 
 Pipeline (matches the assignment):
@@ -49,7 +50,8 @@ Pipeline (matches the assignment):
 4. **Prepare for Google Ads** — drop already-used and forbidden keywords, merge duplicates,
    group by language.
 5. **Generate ads & export** — responsive search ads in each keyword's language pointing at
-   the correct localized URL, plus a Google Ads Editor import file and an on-screen preview.
+   the correct localized URL, plus an on-screen preview and two import artifacts: a Google Ads
+   Editor (desktop) CSV and a web-UI bulk-upload ZIP (one sheet per entity).
 
 Every keyword carries **why** it was dropped, so the admin funnel explains each decision
 rather than being a black box.

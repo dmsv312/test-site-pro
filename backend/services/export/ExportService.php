@@ -74,6 +74,132 @@ final class ExportService
     }
 
     /**
+     * The Google Ads **web-UI** bulk-upload sheets, in dependency upload order (campaigns → ad
+     * groups → keywords → responsive search ads). One sheet per entity because the web tool has no
+     * combined format (see {@see GoogleAdsBulkUploadExport}). Keyword text is sanitized and deduped
+     * per ad group exactly as in the Editor export; only ad groups with a valid ad emit an ad row.
+     *
+     * @return array<int, array{name: string, filename: string, header: string[], rows: array<int, array<string, string>>}>
+     */
+    public function bulkSheets(): array
+    {
+        $campaignRows = [];
+        $seenCampaign = [];
+        $adGroupRows = [];
+        $keywordRows = [];
+        $adRows = [];
+
+        foreach ($this->orderedGroups() as $group) {
+            if (!isset($seenCampaign[$group->campaign])) {
+                $seenCampaign[$group->campaign] = true;
+                $campaignRows[] = GoogleAdsBulkUploadExport::campaignRow($group->campaign);
+            }
+
+            $adGroupRows[] = GoogleAdsBulkUploadExport::adGroupRow($group->campaign, $group->theme);
+
+            $seen = [];
+            /** @var string[] $terms */
+            $terms = $group->getKeywords()->select('raw_term')->column();
+            foreach ($terms as $term) {
+                $row = GoogleAdsBulkUploadExport::keywordRow(
+                    $group->campaign,
+                    $group->theme,
+                    (string) $term,
+                    $group->final_url,
+                );
+                if ($row === null || isset($seen[$row['Keyword']])) {
+                    continue;
+                }
+                $seen[$row['Keyword']] = true;
+                $keywordRows[] = $row;
+            }
+
+            $ad = $group->generatedAd;
+            if ($ad !== null && $ad->is_valid) {
+                $adRows[] = GoogleAdsBulkUploadExport::rsaRow(
+                    $group->campaign,
+                    $group->theme,
+                    $ad->getHeadlines(),
+                    $ad->getDescriptions(),
+                    $ad->path1,
+                    $ad->path2,
+                    $group->final_url,
+                );
+            }
+        }
+
+        return [
+            ['name' => 'campaigns', 'filename' => 'campaigns.csv', 'header' => GoogleAdsBulkUploadExport::campaignHeader(), 'rows' => $campaignRows],
+            ['name' => 'ad groups', 'filename' => 'ad-groups.csv', 'header' => GoogleAdsBulkUploadExport::adGroupHeader(), 'rows' => $adGroupRows],
+            ['name' => 'keywords', 'filename' => 'keywords.csv', 'header' => GoogleAdsBulkUploadExport::keywordHeader(), 'rows' => $keywordRows],
+            ['name' => 'responsive search ads', 'filename' => 'responsive-search-ads.csv', 'header' => GoogleAdsBulkUploadExport::rsaHeader(), 'rows' => $adRows],
+        ];
+    }
+
+    /**
+     * The web-UI bulk-upload package as a ZIP: one CSV per entity plus a README with the upload
+     * order and caveats. Returns an empty string if the archive can't be created.
+     */
+    public function toBulkZip(): string
+    {
+        $sheets = $this->bulkSheets();
+
+        $tmp = tempnam(sys_get_temp_dir(), 'gads-bulk-');
+        if ($tmp === false) {
+            return '';
+        }
+
+        $zip = new \ZipArchive();
+        if ($zip->open($tmp, \ZipArchive::OVERWRITE) !== true) {
+            @unlink($tmp);
+
+            return '';
+        }
+
+        $zip->addFromString('README.txt', self::bulkReadme($sheets));
+        foreach ($sheets as $sheet) {
+            $zip->addFromString($sheet['filename'], CsvWriter::render($sheet['header'], $sheet['rows']));
+        }
+        $zip->close();
+
+        $data = (string) file_get_contents($tmp);
+        @unlink($tmp);
+
+        return $data;
+    }
+
+    /**
+     * README bundled in the bulk-upload ZIP: how to import each sheet and the honest caveats.
+     *
+     * @param array<int, array{name: string, filename: string, header: string[], rows: array<int, array<string, string>>}> $sheets
+     */
+    private static function bulkReadme(array $sheets): string
+    {
+        $lines = [
+            'Google Ads web-UI bulk upload',
+            '=============================',
+            '',
+            'Import in the Google Ads web interface: Tools > Bulk actions > Uploads > "+".',
+            'Upload the sheets ONE AT A TIME, in this order (each references the ones before it):',
+            '',
+        ];
+        foreach ($sheets as $i => $sheet) {
+            $lines[] = sprintf('  %d. %s  (%d rows)', $i + 1, $sheet['filename'], count($sheet['rows']));
+        }
+        $lines[] = '';
+        $lines[] = 'Notes:';
+        $lines[] = '  - Campaigns import PAUSED, on Manual CPC and WITHOUT a budget. Set a daily budget';
+        $lines[] = '    (and a bid strategy if you prefer) and enable each campaign before it can serve.';
+        $lines[] = '  - Responsive search ads import paused; review, then enable.';
+        $lines[] = '  - Column headers match Google\'s official bulk-upload templates; keep them in English.';
+        $lines[] = '  - The web UI has no single combined sheet, so entities are split per file by design.';
+        $lines[] = '  - For the Google Ads Editor DESKTOP app instead, use the single combined CSV export.';
+        $lines[] = '';
+
+        return implode("\r\n", $lines);
+    }
+
+    /**
      * Counts and per-campaign breakdown for the admin preview. Reads the database, so it is usable
      * whether or not a run just happened.
      *

@@ -45,11 +45,11 @@ marketing pages — the stock Yii home/about/contact scaffold was removed.
 backend/                Yii2 application
   config/               web.php, console.php, db.php (env-driven), params.php (lang→URL map)
   controllers/          SiteController (login/logout/error); ImportController, CleaningController, PrepareController, AdsController, ExportController, RulesController (login-gated admin)
-  commands/             console controllers (import/samples, import/file; clean/run; prepare/run; adgen/run; export/file)
+  commands/             console controllers (import/samples, import/file; clean/run; prepare/run; adgen/run; export/file, export/bulk)
   models/               ActiveRecord (Keyword, ImportBatch, AdGroup, GeneratedAd, RuleConfig, BrandTerm/ForbiddenTerm via TermListRecord) + form models (UploadForm, KeywordSearch, User, Login)
   migrations/           schema — import_batch + keyword (stage 3); rule_config + brand_term + forbidden_term (stage 4); ad_group + keyword.ad_group_id (stage 5); generated_ad (stage 6)
-  services/             import/ (readers, adapters, ImportService); cleaning/ (JunkRule, BrandRule, VolumeRule, CleaningService); preparation/ (AlreadyUsedRule, ForbiddenRule, ThemeClusterer, GroupingService, PreparationService); adgen/ (AdContent, RsaValidator, TemplateAdGenerator, StoredAdSource, AdGenerationService); export/ (GoogleAdsEditorExport — pure CSV format; ExportService)
-  views/                site/ (login, error), import/ (dashboard, keywords), cleaning/ (funnel), prepare/ (funnel + campaign preview), ads/ (RSA preview), export/ (preview + download), rules/ (thresholds + lists)
+  services/             import/ (readers, adapters, ImportService); cleaning/ (JunkRule, BrandRule, VolumeRule, CleaningService); preparation/ (AlreadyUsedRule, ForbiddenRule, ThemeClusterer, GroupingService, PreparationService); adgen/ (AdContent, RsaValidator, TemplateAdGenerator, StoredAdSource, AdGenerationService); export/ (CsvWriter — shared RFC-4180 renderer; GoogleAdsEditorExport — desktop combined CSV; GoogleAdsBulkUploadExport — web-UI per-entity sheets; ExportService)
+  views/                site/ (login, error), import/ (dashboard, keywords), cleaning/ (funnel), prepare/ (funnel + campaign preview), ads/ (RSA preview), export/ (preview + both downloads), rules/ (thresholds + lists)
   web/                  front controller + published assets
   docker/entrypoint.sh  waits for DB, refreshes static, runs migrations, starts php-fpm
   Dockerfile            php:8.4-fpm + ext (pdo_pgsql, intl, gd, …) + composer install
@@ -68,7 +68,8 @@ docker compose exec app php yii import/samples   # import the four sample-data f
 docker compose exec app php yii clean/run        # run the cleaning pipeline (junk→dedup→brand→volume); resets stages 5–6 (then run prepare + adgen)
 docker compose exec app php yii prepare/run      # prepare for Google Ads (drop already-used/forbidden → group by language+theme); resets stage 6 (then run adgen)
 docker compose exec app php yii adgen/run        # generate one RSA per ad group (stored copy preferred, template fallback)
-docker compose exec app php yii export/file      # write the Google Ads Editor CSV (default: runtime/export/…)
+docker compose exec app php yii export/file      # write the Google Ads Editor (desktop) CSV (default: runtime/export/…)
+docker compose exec app php yii export/bulk      # write the Google Ads web-UI bulk-upload ZIP (default: runtime/export/…)
 docker compose logs -f app                # app (php-fpm) logs
 docker compose down                       # stop (keep data);  down -v to reset volumes
 ```

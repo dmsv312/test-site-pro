@@ -143,31 +143,12 @@ final class GoogleAdsEditorExport
     /**
      * Render a list of rows (each an associative partial map keyed by column name) to a Google Ads
      * Editor CSV string: the fixed header followed by one line per row, missing columns emitted empty.
+     * RFC-4180 quoting / CRLF / UTF-8 formatting lives in the shared {@see CsvWriter}.
      *
      * @param array<int, array<string, string>> $rows
      */
     public static function render(array $rows): string
     {
-        $header = self::header();
-        $stream = fopen('php://temp', 'r+');
-        if ($stream === false) {
-            return '';
-        }
-
-        // escape='' → RFC-4180 quoting (double the inner quote, no backslash escapes); CRLF line ends.
-        fputcsv($stream, $header, ',', '"', '', "\r\n");
-        foreach ($rows as $row) {
-            $line = [];
-            foreach ($header as $column) {
-                $line[] = $row[$column] ?? '';
-            }
-            fputcsv($stream, $line, ',', '"', '', "\r\n");
-        }
-
-        rewind($stream);
-        $csv = stream_get_contents($stream);
-        fclose($stream);
-
-        return $csv === false ? '' : $csv;
+        return CsvWriter::render(self::header(), $rows);
     }
 }

@@ -48,7 +48,9 @@ Components:
   URL). Output is validated as untrusted input (headline/description length limits, language,
   required URL) and cached; a template fallback covers the CLI being unavailable. No
   per-call paid API.
-- **Export** — a Google Ads Editor-compatible CSV (ad-group keywords + responsive search ads).
+- **Export** — two artifacts for the two Google Ads import paths (decision 34): a Google Ads Editor
+  (desktop) combined CSV, and a web-UI bulk-upload ZIP (one CSV per entity). Formatting is shared in
+  one `CsvWriter`.
 - **Funnel dashboard** — counts at each stage (imported → cleaned → prepared → ad-ready) and
   the reason keywords dropped out.
 
@@ -309,11 +311,29 @@ Recorded as context → decision → consequence.
     smoke over the public URL. HSTS is intentionally left to the Cloudflare edge (adding it at the
     origin risks `includeSubDomains` bleeding onto the shared `dm312sv.online` siblings).
 
+34. **Two export artifacts, because Google Ads has two import paths with different file formats.** A
+    reviewer questioned whether the combined CSV — which is the **Google Ads Editor (desktop)** format
+    (decision 29) — is what the web interface accepts. Research against Google's official docs
+    confirmed it is not: the web UI (Tools → Bulk actions → Uploads) has its **own** format, and — key
+    finding — **no combined single sheet**; every official web template is single-entity, with
+    headers that differ from Editor (an `Action` column, per-entity status columns, match type spelled
+    `Phrase match`, an explicit `Ad type`, a first description column named just `Description`). →
+    Keep the Editor CSV and **add** a second export: a **ZIP of one CSV per entity** (campaigns → ad
+    groups → keywords → responsive search ads, in dependency order, with a bundled README), built by a
+    pure `GoogleAdsBulkUploadExport` whose column headers are verbatim from Google's templates. Both
+    exports share one RFC-4180 `CsvWriter` and stay derived-on-demand (decision 31). Web-UI campaigns
+    are emitted **paused, on `Manual CPC`, with no budget column**, so an accidental import never
+    spends — the honest web-side equivalent of Editor's "stub needs a budget" caveat (decision 29).
+    What we did **not** fully verify (documented, not overclaimed): whether the web UI would also
+    ingest the Editor CSV directly (Google is silent), and exact server-side validation beyond the
+    published template columns.
+
 ## Build stages
 
 See [`WORKLOG.md`](WORKLOG.md) for the stage table and live status. In short: spike ✅ →
 skeleton ✅ → import & model ✅ → cleaning ✅ → prepare ✅ → ad generation ✅ → export ✅ →
-deploy hardening + smoke ✅. **All planned stages done (9/9).**
+deploy hardening + smoke ✅. **All planned stages done (9/9);** dual export (decision 34) added as a
+post-completion refinement.
 
 ## Open questions
 
